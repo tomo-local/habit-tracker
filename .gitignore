@@ -1,0 +1,8 @@
+# ビルド成果物
+habit-tracker
+
+# OAuth認証情報(GitHubにはpushしない。ローカルのリポジトリ直下に置いて使う)
+credentials.json
+token.json
+
+.DS_Store
