@@ -1,5 +1,5 @@
 # ビルド成果物
-habit-tracker
+bin/**
 
 # OAuth認証情報(GitHubにはpushしない。ローカルのリポジトリ直下に置いて使う)
 credentials.json
