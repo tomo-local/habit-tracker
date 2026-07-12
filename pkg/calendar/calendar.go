@@ -1,7 +1,8 @@
-package main
+package calendar
 
 import (
 	"fmt"
+	"habit-tracker/config"
 	"strings"
 	"time"
 
@@ -9,8 +10,8 @@ import (
 	"google.golang.org/api/calendar/v3"
 )
 
-// listCalendars はアカウントのカレンダー名一覧を返す。
-func listCalendars(svc *calendar.Service) ([]string, error) {
+// ListCalendars はアカウントのカレンダー名一覧を返す。
+func ListCalendars(svc *calendar.Service) ([]string, error) {
 	var names []string
 	err := svc.CalendarList.List().Pages(nil, func(page *calendar.CalendarList) error {
 		for _, item := range page.Items {
@@ -21,20 +22,20 @@ func listCalendars(svc *calendar.Service) ([]string, error) {
 	return names, err
 }
 
-// occurrence はカレンダー上の1イベント(タイトルと日付 "2006-01-02")。
-type occurrence struct {
+// Occurrence はカレンダー上の1イベント(タイトルと日付 "2006-01-02")。
+type Occurrence struct {
 	Title string
 	Date  string
 }
 
-// calendarOccurrences は指定カレンダーの since 以降のイベントを返す。
-func calendarOccurrences(svc *calendar.Service, calName string, since time.Time) ([]occurrence, error) {
+// CalendarOccurrences は指定カレンダーの since 以降のイベントを返す。
+func CalendarOccurrences(svc *calendar.Service, calName string, since time.Time) ([]Occurrence, error) {
 	calID, err := findCalendarID(svc, calName)
 	if err != nil {
 		return nil, err
 	}
 
-	var occs []occurrence
+	var occs []Occurrence
 	err = svc.Events.List(calID).
 		SingleEvents(true).
 		TimeMin(since.Format(time.RFC3339)).
@@ -49,11 +50,11 @@ func calendarOccurrences(svc *calendar.Service, calName string, since time.Time)
 					title = "(無題)"
 				}
 				if ev.Start.Date != "" { // 終日イベント
-					occs = append(occs, occurrence{title, ev.Start.Date})
+					occs = append(occs, Occurrence{title, ev.Start.Date})
 				} else if ev.Start.DateTime != "" {
 					t, err := time.Parse(time.RFC3339, ev.Start.DateTime)
 					if err == nil {
-						occs = append(occs, occurrence{title, t.Local().Format("2006-01-02")})
+						occs = append(occs, Occurrence{title, t.Local().Format("2006-01-02")})
 					}
 				}
 			}
@@ -89,7 +90,7 @@ func normalizeTitle(s string) string {
 // matchHabit はタイトルを正式な習慣名に解決する。
 // 正規化後に習慣名を含んでいれば一致とみなし、複数一致時は最長の習慣名を優先。
 // 一致しなければ元のタイトルをそのまま返す。
-func matchHabit(title string, habits []string) string {
+func MatchHabit(title string, habits []string) string {
 	nt := normalizeTitle(title)
 	best := ""
 	for _, h := range habits {
@@ -103,9 +104,9 @@ func matchHabit(title string, habits []string) string {
 	return best
 }
 
-// addEntry は習慣の実施記録(終日イベント)を追加する。
+// AddEntry は習慣の実施記録(終日イベント)を追加する。
 // すでに同じタイトルのイベントがその日にあれば何もしない。
-func addEntry(svc *calendar.Service, cfg *Config, habitName, date string) error {
+func AddEntry(svc *calendar.Service, cfg *config.Config, habitName, date string) error {
 	day, err := time.ParseInLocation("2006-01-02", date, time.Local)
 	if err != nil {
 		return fmt.Errorf("日付は YYYY-MM-DD 形式で指定してください: %w", err)
@@ -137,12 +138,12 @@ func addEntry(svc *calendar.Service, cfg *Config, habitName, date string) error 
 		return err
 	}
 
-	occs, err := calendarOccurrences(svc, calName, day)
+	occs, err := CalendarOccurrences(svc, calName, day)
 	if err != nil {
 		return err
 	}
 	for _, o := range occs {
-		if o.Date == date && matchHabit(o.Title, cfg.Habits) == habitName {
+		if o.Date == date && MatchHabit(o.Title, cfg.Habits) == habitName {
 			fmt.Printf("%s の %q は記録済みです\n", date, habitName)
 			return nil
 		}
@@ -162,7 +163,7 @@ func addEntry(svc *calendar.Service, cfg *Config, habitName, date string) error 
 
 // streak は today から遡って連続している日数を返す。
 // 今日まだ未実施でも昨日まで続いていればストリークは継続扱い。
-func streak(days map[string]bool, today time.Time) int {
+func Streak(days map[string]bool, today time.Time) int {
 	d := today
 	if !days[d.Format("2006-01-02")] {
 		d = d.AddDate(0, 0, -1)

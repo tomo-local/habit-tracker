@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"fmt"
@@ -8,7 +8,9 @@ import (
 	"sort"
 	"time"
 
-	"google.golang.org/api/calendar/v3"
+	gcal "google.golang.org/api/calendar/v3"
+	"habit-tracker/config"
+	"habit-tracker/pkg/calendar"
 )
 
 type cell struct {
@@ -30,7 +32,7 @@ type pageData struct {
 	UpdatedAt string
 }
 
-func serve(svc *calendar.Service, cfg *Config, port, weeks int) error {
+func Serve(svc *gcal.Service, cfg *config.Config, port, weeks int) error {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		data, err := buildPage(svc, cfg, weeks)
 		if err != nil {
@@ -48,7 +50,7 @@ func serve(svc *calendar.Service, cfg *Config, port, weeks int) error {
 	return http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", port), nil)
 }
 
-func buildPage(svc *calendar.Service, cfg *Config, weeks int) (*pageData, error) {
+func buildPage(svc *gcal.Service, cfg *config.Config, weeks int) (*pageData, error) {
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
 	// グリッドの起点: weeks 週前の日曜日
@@ -56,7 +58,7 @@ func buildPage(svc *calendar.Service, cfg *Config, weeks int) (*pageData, error)
 
 	data := &pageData{UpdatedAt: now.Format("2006-01-02 15:04")}
 	for _, name := range cfg.Calendars {
-		occs, err := calendarOccurrences(svc, name, start)
+		occs, err := calendar.CalendarOccurrences(svc, name, start)
 		if err != nil {
 			return nil, err
 		}
@@ -77,7 +79,7 @@ type habitDays struct {
 // false ならカレンダー全体で1習慣。
 // habits に登録された習慣はイベント0件でも行を出す。
 // どの習慣にも一致しないタイトルは独立した行になる(誤字に気づけるように)。
-func groupHabits(calName string, occs []occurrence, cfg *Config) []habitDays {
+func groupHabits(calName string, occs []calendar.Occurrence, cfg *config.Config) []habitDays {
 	grouped := map[string]map[string]bool{}
 	var unmatched []string
 
@@ -89,7 +91,7 @@ func groupHabits(calName string, occs []occurrence, cfg *Config) []habitDays {
 	for _, o := range occs {
 		key := calName
 		if cfg.GroupByTitle {
-			key = matchHabit(o.Title, cfg.Habits)
+			key = calendar.MatchHabit(o.Title, cfg.Habits)
 		}
 		if grouped[key] == nil {
 			grouped[key] = map[string]bool{}
@@ -116,7 +118,7 @@ func groupHabits(calName string, occs []occurrence, cfg *Config) []habitDays {
 }
 
 func buildHabitView(name string, days map[string]bool, start, today time.Time, weeks int) habitView {
-	hv := habitView{Name: name, Streak: streak(days, today)}
+	hv := habitView{Name: name, Streak: calendar.Streak(days, today)}
 	for w := 0; w < weeks; w++ {
 		var week [7]cell
 		for d := 0; d < 7; d++ {

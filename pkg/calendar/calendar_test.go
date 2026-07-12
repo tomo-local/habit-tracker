@@ -1,6 +1,7 @@
-package main
+package calendar_test
 
 import (
+	"habit-tracker/pkg/calendar"
 	"testing"
 	"time"
 )
@@ -11,15 +12,15 @@ func TestMatchHabit(t *testing.T) {
 		title, want string
 	}{
 		{"筋トレ", "筋トレ"},
-		{" 筋トレ ", "筋トレ"},          // 前後空白
-		{"筋トレ30分", "筋トレ"},        // 部分一致
+		{" 筋トレ ", "筋トレ"},  // 前後空白
+		{"筋トレ30分", "筋トレ"}, // 部分一致
 		{"情報処理の資格勉強", "情報処理の資格勉強"},
-		{"きんトレ", "きんトレ"},         // 誤字は集約されず独立行(気づける)
-		{"散歩", "散歩"},               // 未登録タイトルはそのまま
+		{"きんトレ", "きんトレ"}, // 誤字は集約されず独立行(気づける)
+		{"散歩", "散歩"},     // 未登録タイトルはそのまま
 	}
 	for _, tt := range tests {
-		if got := matchHabit(tt.title, habits); got != tt.want {
-			t.Errorf("matchHabit(%q) = %q, want %q", tt.title, got, tt.want)
+		if got := calendar.MatchHabit(tt.title, habits); got != tt.want {
+			t.Errorf("MatchHabit(%q) = %q, want %q", tt.title, got, tt.want)
 		}
 	}
 }
@@ -45,7 +46,7 @@ func TestStreak(t *testing.T) {
 		for _, o := range tt.days {
 			days[day(o)] = true
 		}
-		if got := streak(days, today); got != tt.want {
+		if got := calendar.Streak(days, today); got != tt.want {
 			t.Errorf("%s: streak = %d, want %d", tt.name, got, tt.want)
 		}
 	}

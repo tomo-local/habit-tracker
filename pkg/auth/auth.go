@@ -1,9 +1,10 @@
-package main
+package auth
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"habit-tracker/config"
 	"net"
 	"net/http"
 	"os"
@@ -16,9 +17,9 @@ import (
 	"google.golang.org/api/option"
 )
 
-// calendarService は OAuth 認証済みの Calendar API クライアントを返す。
+// CalendarService は OAuth 認証済みの Calendar API クライアントを返す。
 // 初回はブラウザで同意フローを実行し、トークンを token.json に保存する。
-func calendarService(ctx context.Context) (*calendar.Service, error) {
+func CalendarService(ctx context.Context) (*calendar.Service, error) {
 	b, err := readCredentials()
 	if err != nil {
 		return nil, err
@@ -29,7 +30,7 @@ func calendarService(ctx context.Context) (*calendar.Service, error) {
 		return nil, fmt.Errorf("credentials.json の解析に失敗: %w", err)
 	}
 
-	tokPath := filepath.Join(configDir(), "token.json")
+	tokPath := filepath.Join(config.ConfigDir(), "token.json")
 	tok, err := tokenFromFile(tokPath)
 	if err != nil {
 		tok, err = tokenFromWeb(ctx, conf)
@@ -52,7 +53,7 @@ func readCredentials() ([]byte, error) {
 	}
 	paths = append(paths,
 		"credentials.json",
-		filepath.Join(configDir(), "credentials.json"),
+		filepath.Join(config.ConfigDir(), "credentials.json"),
 	)
 	for _, p := range paths {
 		if b, err := os.ReadFile(p); err == nil {
