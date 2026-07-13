@@ -8,14 +8,13 @@ import (
 	"sort"
 	"time"
 
-	gcal "google.golang.org/api/calendar/v3"
 	"habit-tracker/config"
 	"habit-tracker/pkg/calendar"
 )
 
 type cell struct {
 	Date   string
-	Done   bool
+	Level  int // 0=なし 1=薄い(~30min) 2=普通(~1h) 3=濃い(~2h+)
 	Future bool
 	Today  bool
 }
@@ -32,7 +31,7 @@ type pageData struct {
 	UpdatedAt string
 }
 
-func Serve(svc *gcal.Service, cfg *config.Config, port, weeks int) error {
+func Serve(svc calendar.Client, cfg *config.Config, port, weeks int) error {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		data, err := buildPage(svc, cfg, weeks)
 		if err != nil {
@@ -50,7 +49,7 @@ func Serve(svc *gcal.Service, cfg *config.Config, port, weeks int) error {
 	return http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", port), nil)
 }
 
-func buildPage(svc *gcal.Service, cfg *config.Config, weeks int) (*pageData, error) {
+func buildPage(svc calendar.Client, cfg *config.Config, weeks int) (*pageData, error) {
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
 	// グリッドの起点: weeks 週前の日曜日
@@ -58,7 +57,7 @@ func buildPage(svc *gcal.Service, cfg *config.Config, weeks int) (*pageData, err
 
 	data := &pageData{UpdatedAt: now.Format("2006-01-02 15:04")}
 	for _, name := range cfg.Calendars {
-		occs, err := calendar.CalendarOccurrences(svc, name, start)
+		occs, err := svc.ListEvents(name, start)
 		if err != nil {
 			return nil, err
 		}
@@ -71,7 +70,7 @@ func buildPage(svc *gcal.Service, cfg *config.Config, weeks int) (*pageData, err
 
 type habitDays struct {
 	name string
-	days map[string]bool
+	days map[string]int // date -> 合計分数
 }
 
 // groupHabits はイベント列を習慣単位にまとめる。
@@ -80,12 +79,12 @@ type habitDays struct {
 // habits に登録された習慣はイベント0件でも行を出す。
 // どの習慣にも一致しないタイトルは独立した行になる(誤字に気づけるように)。
 func groupHabits(calName string, occs []calendar.Occurrence, cfg *config.Config) []habitDays {
-	grouped := map[string]map[string]bool{}
+	grouped := map[string]map[string]int{}
 	var unmatched []string
 
 	if cfg.GroupByTitle {
 		for _, h := range cfg.Habits {
-			grouped[h] = map[string]bool{}
+			grouped[h] = map[string]int{}
 		}
 	}
 	for _, o := range occs {
@@ -94,10 +93,10 @@ func groupHabits(calName string, occs []calendar.Occurrence, cfg *config.Config)
 			key = calendar.MatchHabit(o.Title, cfg.Habits)
 		}
 		if grouped[key] == nil {
-			grouped[key] = map[string]bool{}
+			grouped[key] = map[string]int{}
 			unmatched = append(unmatched, key)
 		}
-		grouped[key][o.Date] = true
+		grouped[key][o.Date] += o.Minutes
 	}
 
 	// 表示順: config の habits 順 → 未登録タイトル(名前順)
@@ -117,20 +116,38 @@ func groupHabits(calName string, occs []calendar.Occurrence, cfg *config.Config)
 	return habits
 }
 
-func buildHabitView(name string, days map[string]bool, start, today time.Time, weeks int) habitView {
-	hv := habitView{Name: name, Streak: calendar.Streak(days, today)}
+func minutesToLevel(minutes int) int {
+	switch {
+	case minutes >= 120:
+		return 3
+	case minutes >= 60:
+		return 2
+	case minutes > 0:
+		return 1
+	default:
+		return 0
+	}
+}
+
+func buildHabitView(name string, days map[string]int, start, today time.Time, weeks int) habitView {
+	doneByDay := make(map[string]bool, len(days))
+	for d := range days {
+		doneByDay[d] = true
+	}
+	hv := habitView{Name: name, Streak: calendar.Streak(doneByDay, today)}
 	for w := 0; w < weeks; w++ {
 		var week [7]cell
 		for d := 0; d < 7; d++ {
 			day := start.AddDate(0, 0, w*7+d)
 			key := day.Format("2006-01-02")
+			level := minutesToLevel(days[key])
 			c := cell{
 				Date:   key,
-				Done:   days[key],
+				Level:  level,
 				Future: day.After(today),
 				Today:  day.Equal(today),
 			}
-			if c.Done {
+			if level > 0 {
 				hv.Total++
 			}
 			week[d] = c
@@ -168,7 +185,9 @@ var page = template.Must(template.New("page").Parse(`<!DOCTYPE html>
     width: 12px; height: 12px; border-radius: 3px;
     background: #161b22; outline: 1px solid rgba(255,255,255,0.05); outline-offset: -1px;
   }
-  .cell.done { background: #39d353; }
+  .cell.l1 { background: rgba(57, 211, 83, 0.25); }
+  .cell.l2 { background: rgba(57, 211, 83, 0.60); }
+  .cell.l3 { background: #39d353; }
   .cell.future { background: transparent; outline: none; }
   .cell.today { outline: 1px solid #e6edf3; }
 </style>
@@ -187,7 +206,7 @@ var page = template.Must(template.New("page").Parse(`<!DOCTYPE html>
     <div class="labels"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
     {{range .Weeks}}
     <div class="week">
-      {{range .}}<div class="cell{{if .Done}} done{{end}}{{if .Future}} future{{end}}{{if .Today}} today{{end}}" title="{{.Date}}"></div>{{end}}
+      {{range .}}<div class="cell{{if .Level}} l{{.Level}}{{end}}{{if .Future}} future{{end}}{{if .Today}} today{{end}}" title="{{.Date}}"></div>{{end}}
     </div>
     {{end}}
   </div>

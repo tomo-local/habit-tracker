@@ -11,7 +11,7 @@ func TestPageRender(t *testing.T) {
 		UpdatedAt: "2026-07-11 10:00",
 		Habits: []habitView{{
 			Name: "筋トレ", Streak: 3, Total: 10,
-			Weeks: [][7]cell{{{Date: "2026-07-05", Done: true}, {Date: "2026-07-06"}, {Date: "2026-07-07", Done: true}, {Date: "2026-07-08"}, {Date: "2026-07-09"}, {Date: "2026-07-10"}, {Date: "2026-07-11", Today: true, Future: false}}},
+			Weeks: [][7]cell{{{Date: "2026-07-05", Level: 2}, {Date: "2026-07-06"}, {Date: "2026-07-07", Level: 1}, {Date: "2026-07-08"}, {Date: "2026-07-09"}, {Date: "2026-07-10"}, {Date: "2026-07-11", Today: true, Future: false}}},
 		}},
 	}
 	var buf bytes.Buffer
@@ -19,7 +19,7 @@ func TestPageRender(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	for _, want := range []string{"筋トレ", "🔥 3日連続", "計 10回", `class="cell done"`, `class="cell today"`} {
+	for _, want := range []string{"筋トレ", "🔥 3日連続", "計 10回", `class="cell l2"`, `class="cell l1"`, `class="cell today"`} {
 		if !strings.Contains(out, want) {
 			t.Errorf("output missing %q", want)
 		}

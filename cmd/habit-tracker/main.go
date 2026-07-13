@@ -20,18 +20,18 @@ import (
 func main() {
 	port := flag.Int("port", 8391, "port for the web view")
 	weeks := flag.Int("weeks", 26, "number of weeks to show in the grid")
-	date := flag.String("date", time.Now().Format("2006-01-02"), "date for `add` (YYYY-MM-DD)")
+	date := flag.String("date", time.Now().Format("2006-01-02 15:04"), "end time for `add` (YYYY-MM-DD HH:MM); start is 30 min before")
 	flag.Parse()
 
 	ctx := context.Background()
 
 	switch flag.Arg(0) {
 	case "list":
-		svc, err := auth.CalendarService(ctx)
+		svc, err := newCalendarClient(ctx)
 		if err != nil {
 			fatal(err)
 		}
-		cals, err := calendar.ListCalendars(svc)
+		cals, err := svc.ListCalendars()
 		if err != nil {
 			fatal(err)
 		}
@@ -51,7 +51,7 @@ func main() {
 		if len(cfg.Calendars) == 0 {
 			fatal(fmt.Errorf("config.json の calendars が空です"))
 		}
-		svc, err := auth.CalendarService(ctx)
+		svc, err := newCalendarClient(ctx)
 		if err != nil {
 			fatal(err)
 		}
@@ -73,7 +73,7 @@ func main() {
 				fatal(err)
 			}
 		}
-		svc, err := auth.CalendarService(ctx)
+		svc, err := newCalendarClient(ctx)
 		if err != nil {
 			fatal(err)
 		}
@@ -86,6 +86,40 @@ func main() {
 		fmt.Fprintf(os.Stderr, "unknown command: %s\nusage: habit-tracker [-port N] [-weeks N] [-date YYYY-MM-DD] [list|serve|add <習慣名>]\n", flag.Arg(0))
 		os.Exit(1)
 	}
+}
+
+// newCalendarClient は credentials を読み込み、認証して calendar.Client を返す。
+func newCalendarClient(ctx context.Context) (calendar.Client, error) {
+	creds, err := readCredentials()
+	if err != nil {
+		return nil, err
+	}
+	ts, err := auth.Authenticate(ctx, creds)
+	if err != nil {
+		return nil, err
+	}
+	return calendar.NewClient(ctx, ts)
+}
+
+// readCredentials は credentials.json を探して読み込む。
+// 実行ファイルの隣 → カレントディレクトリ → ~/.config/habit-tracker/ の順で検索する。
+func readCredentials() ([]byte, error) {
+	var paths []string
+	if exe, err := os.Executable(); err == nil {
+		paths = append(paths, filepath.Join(filepath.Dir(exe), "credentials.json"))
+	}
+	paths = append(paths,
+		"credentials.json",
+		filepath.Join(config.ConfigDir(), "credentials.json"),
+	)
+	for _, p := range paths {
+		if b, err := os.ReadFile(p); err == nil {
+			return b, nil
+		}
+	}
+	return nil, fmt.Errorf(
+		"credentials.json が見つかりません(探した場所: %v)。\n"+
+			"GCPコンソールで OAuth クライアント(デスクトップアプリ)を作成し、JSONを配置してください", paths)
 }
 
 // selectHabits は登録済み習慣を番号選択で選ばせる(スペース/カンマ区切りで複数可)。

@@ -14,20 +14,14 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
-	"google.golang.org/api/option"
 )
 
-// CalendarService は OAuth 認証済みの Calendar API クライアントを返す。
-// 初回はブラウザで同意フローを実行し、トークンを token.json に保存する。
-func CalendarService(ctx context.Context) (*calendar.Service, error) {
-	b, err := readCredentials()
+// Authenticate は credentials JSON から OAuth トークンソースを返す。
+// トークンが未保存の場合はブラウザで同意フローを実行し、token.json に保存する。
+func Authenticate(ctx context.Context, credentials []byte) (oauth2.TokenSource, error) {
+	conf, err := google.ConfigFromJSON(credentials, calendar.CalendarReadonlyScope, calendar.CalendarEventsScope)
 	if err != nil {
-		return nil, err
-	}
-	// 読み取り(カレンダー一覧・イベント)+ add コマンド用のイベント書き込み
-	conf, err := google.ConfigFromJSON(b, calendar.CalendarReadonlyScope, calendar.CalendarEventsScope)
-	if err != nil {
-		return nil, fmt.Errorf("credentials.json の解析に失敗: %w", err)
+		return nil, fmt.Errorf("credentials の解析に失敗: %w", err)
 	}
 
 	tokPath := filepath.Join(config.ConfigDir(), "token.json")
@@ -41,28 +35,7 @@ func CalendarService(ctx context.Context) (*calendar.Service, error) {
 			return nil, err
 		}
 	}
-	return calendar.NewService(ctx, option.WithTokenSource(conf.TokenSource(ctx, tok)))
-}
-
-// readCredentials はリポジトリ直下(実行ファイルの隣→カレントディレクトリ)、
-// 次に ~/.config/habit-tracker/ の順で credentials.json を探す。
-func readCredentials() ([]byte, error) {
-	var paths []string
-	if exe, err := os.Executable(); err == nil {
-		paths = append(paths, filepath.Join(filepath.Dir(exe), "credentials.json"))
-	}
-	paths = append(paths,
-		"credentials.json",
-		filepath.Join(config.ConfigDir(), "credentials.json"),
-	)
-	for _, p := range paths {
-		if b, err := os.ReadFile(p); err == nil {
-			return b, nil
-		}
-	}
-	return nil, fmt.Errorf(
-		"credentials.json が見つかりません(探した場所: %v)。\n"+
-			"GCPコンソールで OAuth クライアント(デスクトップアプリ)を作成し、JSONを配置してください", paths)
+	return conf.TokenSource(ctx, tok), nil
 }
 
 func tokenFromFile(path string) (*oauth2.Token, error) {
@@ -88,7 +61,6 @@ func saveToken(path string, tok *oauth2.Token) error {
 	return os.WriteFile(path, b, 0o600)
 }
 
-// tokenFromWeb はローカルにコールバック用サーバーを立ててブラウザで認可を受ける。
 func tokenFromWeb(ctx context.Context, conf *oauth2.Config) (*oauth2.Token, error) {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
