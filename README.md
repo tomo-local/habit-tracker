@@ -58,38 +58,28 @@ habit-tracker              # デフォルト習慣のheatmapが表示される
 ## ストレージ
 
 ```
-~/.config/habit-tracker/
-├── config.json              # グローバル設定（アクティブアカウント・アカウント一覧）
-└── <uuid>/
-    ├── token.json           # OAuthトークン
-    └── config.json          # アカウントごとの習慣・カレンダー設定
+~/.config/habit/
+├── token.json       # OAuthトークン
+└── config.json      # 習慣・カレンダー設定
 ```
 
-### グローバル config.json
+環境変数でパスを上書き可能:
+- `HABIT_CONFIG_DIR` — 設定ディレクトリのパス（デフォルト: `~/.config/habit/`）
+- `HABIT_CREDENTIALS_DIR` — `credentials.json` があるディレクトリのパス
+
+### config.json
 
 ```json
 {
-  "active": "<uuid>",
-  "accounts": {
-    "<uuid>": { "email": "you@gmail.com" }
-  }
-}
-```
-
-### アカウントごとの config.json
-
-```json
-{
-  "calendars": ["habit"],
-  "group_by_title": true,
+  "calendar_id": "abc123@group.calendar.google.com",
+  "calendar_name": "habit",
   "habits": ["筋トレ", "読書"]
 }
 ```
 
-> **注意**: config.json は `setup` または `serve` 経由でのみ変更する。手動編集は非対応。
+> **注意**: config.json は `setup` 経由でのみ変更する。手動編集は非対応。
 
-- `group_by_title: true` — 1つのカレンダー内でイベントタイトルごとに習慣を分ける
-- `habits` — 追跡する習慣名のリスト。config先頭の習慣が `view` のデフォルト表示になる
+- `habits` — 追跡する習慣名のリスト。先頭の習慣が `view` のデフォルト表示になる
 - 習慣ごとにカレンダーを分ける運用なら `{"calendars": ["筋トレ", "読書"]}` だけでよい
 
 ## view の表示
