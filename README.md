@@ -1,13 +1,33 @@
 # habit-tracker
 
-Googleカレンダーの「習慣専用カレンダー」を元に、GitHub contributions 風の格子ビューで
-習慣の継続状況(連続日数・実施回数)を表示するローカルツール。
+Googleカレンダーを使って習慣の継続状況を管理するCLIツール。
 
-## 仕組み
+- CLIでGitHub contributions風のheatmapを表示
+- カレンダーへの習慣記録を1コマンドで追加
+- 複数Googleアカウントの切り替えに対応
+- Web UIで習慣・記録を管理（`serve`、低優先度）
 
-- 習慣ごとに Google カレンダーを 1 つ用意する(例: 「筋トレ」「読書」)
-- そのカレンダーにイベントがある日 = その習慣を実施した日としてカウント
-- `habit-tracker` を起動するとブラウザで格子ビューが開く(リロードで再取得)
+## コマンド一覧
+
+```sh
+habit-tracker                        # view と同じ（デフォルト習慣を表示）
+
+habit-tracker view                   # デフォルト習慣のheatmapをCLIで表示
+habit-tracker view <habit名>          # 指定した習慣を表示
+
+habit-tracker auth login             # Googleアカウントを認証してトークンを保存
+habit-tracker auth list              # 認証済みアカウント一覧
+habit-tracker auth switch            # アクティブアカウントを切り替え
+habit-tracker auth remove            # アカウントを削除
+
+habit-tracker setup                  # カレンダー選択・習慣登録（インタラクティブ）
+
+habit-tracker add                    # 登録済み習慣をインタラクティブに選んで記録
+habit-tracker add <habit名>           # 指定した習慣を直接記録
+habit-tracker add <habit名> -d 60    # 記録時間を変更（デフォルト: 30分）
+
+habit-tracker serve                  # Web UIを起動してブラウザで管理
+```
 
 ## セットアップ
 
@@ -16,22 +36,47 @@ Googleカレンダーの「習慣専用カレンダー」を元に、GitHub cont
 1. [GCP コンソール](https://console.cloud.google.com/) でプロジェクトを作成
 2. 「APIとサービス」→「ライブラリ」で **Google Calendar API** を有効化
 3. 「認証情報」→「認証情報を作成」→「OAuth クライアント ID」→ 種類は **デスクトップアプリ**
-   (初回は同意画面の設定を求められる。User Type は「外部」+ テストユーザーに自分を追加)
-4. JSON をダウンロードしてリポジトリ直下に `credentials.json` として配置
-   (`~/.config/habit-tracker/credentials.json` でも可。実行ファイルの隣 → カレントディレクトリ → `~/.config` の順で探す)
+   （初回は同意画面の設定を求められる。User Type は「外部」＋テストユーザーに自分を追加）
+4. JSON をダウンロードして `credentials.json` として配置
+   （実行ファイルの隣 → カレントディレクトリ → `~/.config/habit-tracker/` の順で探す）
 
-> **注意**: credentials.json を含むこのリポジトリを公開リポジトリに push しないこと。
+> **注意**: `credentials.json` を公開リポジトリに push しないこと。
 
-### 2. ビルドとカレンダー確認
+### 2. 認証とセットアップ
 
 ```sh
-go build -o habit-tracker .
-./habit-tracker list   # 初回はブラウザで OAuth 認証 → カレンダー名一覧が出る
+habit-tracker auth login   # ブラウザでOAuth認証 → トークン保存
+habit-tracker setup        # カレンダーを選択し、追跡する習慣を登録
 ```
 
-### 3. 習慣カレンダーを設定
+### 3. 動作確認
 
-`~/.config/habit-tracker/config.json`:
+```sh
+habit-tracker              # デフォルト習慣のheatmapが表示される
+```
+
+## ストレージ
+
+```
+~/.config/habit-tracker/
+├── config.json              # グローバル設定（アクティブアカウント・アカウント一覧）
+└── <uuid>/
+    ├── token.json           # OAuthトークン
+    └── config.json          # アカウントごとの習慣・カレンダー設定
+```
+
+### グローバル config.json
+
+```json
+{
+  "active": "<uuid>",
+  "accounts": {
+    "<uuid>": { "email": "you@gmail.com" }
+  }
+}
+```
+
+### アカウントごとの config.json
 
 ```json
 {
@@ -41,27 +86,35 @@ go build -o habit-tracker .
 }
 ```
 
+> **注意**: config.json は `setup` または `serve` 経由でのみ変更する。手動編集は非対応。
+
 - `group_by_title: true` — 1つのカレンダー内でイベントタイトルごとに習慣を分ける
-- `habits` — 正式な習慣名のリスト(誤字対策)。タイトルは正規化(空白・全角半角・大小文字)の上、
-  習慣名を含めば集約される(「筋トレ30分」→「筋トレ」)。どれにも一致しないタイトルは
-  独立した行として表示されるので、誤字に気づいたらカレンダー側を修正する。
-  登録済みの習慣はイベントが無くても行が表示される。
+- `habits` — 追跡する習慣名のリスト。config先頭の習慣が `view` のデフォルト表示になる
 - 習慣ごとにカレンダーを分ける運用なら `{"calendars": ["筋トレ", "読書"]}` だけでよい
 
-## 使い方
+## view の表示
 
-```sh
-./habit-tracker              # サーバー起動 + ブラウザが開く
-./habit-tracker -weeks 52    # 表示期間を52週に
-./habit-tracker -port 9000   # ポート変更
+GitHub contributions グラフと同じレイアウト。列 = 週（左が過去）、行 = 曜日（上が日曜）。
 
-./habit-tracker add                            # 登録済み習慣から番号で選んで記録(複数可)
-./habit-tracker add 筋トレ                     # 名前を直接指定して記録
-./habit-tracker -date 2026-07-10 add 筋トレ    # 日付を指定して記録
+```
+筋トレ  🔥 12日連続
+
+
+Sun  □□□□□■□□■□■□□□□■□□■□■□□□□■□□■□■□□□□■□□■□■□□□
+Mon  ■□□■□■□■□□■□■□■□□■□■□□■□■□■□□■□■□□■□■□■□□■□■
+Tue  □■□□■□■□■□□■□□■□■□□■□■□■□□■□□■□■□□■□■□■□□■□□
+Wed  □□■□□■□■□□■□■□□□■□■□□■□■□■□□■□■□□□■□■□□■□■□□
+Thu  ■□□■□□■□■□□■□■□■□□■□■□□■□■□■□□■□■□■□□■□■□□□□
+Fri  □■□□■□□■□■□□■□■□■□□■□■□□■□■□■□□■□■□■□□■□■□□□
+Sat  □□■□□■□□■□■□□■□□□■□□■□■□□■□□□■□□■□■□□■□□□□□□
 ```
 
-`add` は同じ日に同じ習慣が記録済みなら何もしない(重複防止)。
-`group_by_title` が true の場合は config の先頭カレンダーに、false の場合は習慣名と同名のカレンダーに書き込む。
+- ■ = 実施日、□ = 未実施
+- 🔥 連続日数: 今日から遡って連続実施している日数（今日未実施でも昨日まで続いていれば継続扱い）
 
-- 🔥 連続日数: 今日から遡って連続実施している日数(今日未実施でも昨日まで続いていれば継続扱い)
-- 格子: 列 = 週、行 = 曜日(日曜始まり)。緑 = 実施日、白枠 = 今日
+## add の仕様
+
+- 引数なし: 登録済み習慣を番号で選んで記録（複数選択可）
+- `add <habit名>`: 名前を直接指定して記録
+- `-d <分>`: 記録する時間（デフォルト: 30分）
+- 同じ日に同じ習慣が記録済みなら何もしない（重複防止）
