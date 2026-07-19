@@ -7,20 +7,21 @@ import (
 
 func Test_colorBlock(t *testing.T) {
 	tests := []struct {
-		count    int
+		minutes  int
 		wantCode int
 	}{
-		{0, 236},
-		{1, 22},
-		{2, 34},
-		{3, 46},
-		{10, 46},
+		{0, 236},   // colorNone
+		{15, 236},  // below 30m threshold → still colorNone
+		{30, 22},   // colorLight
+		{60, 34},   // colorMedium
+		{120, 46},  // colorDark
+		{180, 46},  // above 120m → colorDark
 	}
 
 	for _, tt := range tests {
-		t.Run(fmt.Sprintf("count=%d", tt.count), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%dmin", tt.minutes), func(t *testing.T) {
 			want := fmt.Sprintf("\033[48;5;%dm  \033[0m", tt.wantCode)
-			if got := colorBlock(tt.count); got != want {
+			if got := colorBlock(tt.minutes); got != want {
 				t.Errorf("got %q, want %q", got, want)
 			}
 		})

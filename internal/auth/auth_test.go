@@ -25,7 +25,7 @@ func Test_Authorize(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		code       string // 空 = コールバックに code なし
+		code       string // empty = no code in callback
 		wantToken  string
 		wantErrMsg string
 	}{

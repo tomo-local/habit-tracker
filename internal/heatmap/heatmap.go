@@ -34,6 +34,9 @@ const (
 	colorDark   = 3
 )
 
+// colorThresholds defines minute thresholds in ascending order (30m, 60m, 120m)
+var colorThresholds = []int{30, 60, 120}
+
 var colorCodes = map[int]int{
 	colorNone:   236,
 	colorLight:  22,
@@ -41,7 +44,12 @@ var colorCodes = map[int]int{
 	colorDark:   46,
 }
 
-func colorBlock(count int) string {
-	level := min(count, colorDark)
+func colorBlock(minutes int) string {
+	level := colorNone
+	for i, threshold := range colorThresholds {
+		if minutes >= threshold {
+			level = i + 1
+		}
+	}
 	return fmt.Sprintf("\033[48;5;%dm  \033[0m", colorCodes[level])
 }

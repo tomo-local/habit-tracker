@@ -32,7 +32,7 @@ func Test_Client(t *testing.T) {
 		mux.HandleFunc("/users/me/calendarList", func(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(gcal.CalendarList{
 				Items: []*gcal.CalendarListEntry{
-					{Id: "cal1", Summary: "習慣"},
+					{Id: "cal1", Summary: "Habits"},
 				},
 			})
 		})
@@ -44,8 +44,8 @@ func Test_Client(t *testing.T) {
 		if len(entries) != 1 {
 			t.Fatalf("got %d entries, want 1", len(entries))
 		}
-		if entries[0].ID != "cal1" || entries[0].Name != "習慣" {
-			t.Errorf("got %+v, want {ID:cal1 Name:習慣}", entries[0])
+		if entries[0].ID != "cal1" || entries[0].Name != "Habits" {
+			t.Errorf("got %+v, want {ID:cal1 Name:Habits}", entries[0])
 		}
 	})
 
@@ -59,7 +59,7 @@ func Test_Client(t *testing.T) {
 			json.NewEncoder(w).Encode(gcal.Event{Id: "ev1"})
 		})
 
-		err := newTestClient(t, mux).AddEvent("cal1", "筋トレ", 30*time.Minute)
+		err := newTestClient(t, mux).AddEvent("cal1", "workout", 30*time.Minute)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -75,10 +75,10 @@ func Test_Client(t *testing.T) {
 			{
 				name: "returns converted events",
 				items: []*gcal.Event{
-					{Summary: "筋トレ", Start: &gcal.EventDateTime{DateTime: "2026-07-20T10:00:00+09:00"}},
+					{Summary: "workout", Start: &gcal.EventDateTime{DateTime: "2026-07-20T10:00:00+09:00"}},
 				},
 				wantCount: 1,
-				wantTitle: "筋トレ",
+				wantTitle: "workout",
 			},
 			{
 				name:      "empty list",

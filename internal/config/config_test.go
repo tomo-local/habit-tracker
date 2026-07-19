@@ -30,7 +30,7 @@ func Test_Write_RoundTrip(t *testing.T) {
 	original := &Config{
 		CalendarID:   "cal123",
 		CalendarName: "habit",
-		Habits:       []string{"筋トレ", "読書"},
+		Habits:       []string{"workout", "reading"},
 	}
 	if err := original.Write(); err != nil {
 		t.Fatalf("Write: %v", err)
@@ -70,7 +70,7 @@ func Test_Read_MalformedJSON(t *testing.T) {
 func Test_Write_CreatesDir(t *testing.T) {
 	t.Setenv(habitConfigDir, filepath.Join(t.TempDir(), "nested", "dir"))
 
-	cfg := &Config{Habits: []string{"筋トレ"}}
+	cfg := &Config{Habits: []string{"workout"}}
 	if err := cfg.Write(); err != nil {
 		t.Fatalf("Write should create directory: %v", err)
 	}
@@ -82,7 +82,7 @@ func Test_Write_CreatesDir(t *testing.T) {
 func Test_Write_FilePermissions(t *testing.T) {
 	withTempDir(t)
 
-	cfg := &Config{Habits: []string{"筋トレ"}}
+	cfg := &Config{Habits: []string{"workout"}}
 	if err := cfg.Write(); err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +99,7 @@ func Test_Write_FilePermissions(t *testing.T) {
 func Test_ConcurrentReadWrite(t *testing.T) {
 	withTempDir(t)
 
-	cfg := &Config{CalendarID: "initial", Habits: []string{"筋トレ"}}
+	cfg := &Config{CalendarID: "initial", Habits: []string{"workout"}}
 	if err := cfg.Write(); err != nil {
 		t.Fatal(err)
 	}
