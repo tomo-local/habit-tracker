@@ -37,8 +37,8 @@ habit-tracker serve                  # Web UIを起動してブラウザで管�
 2. 「APIとサービス」→「ライブラリ」で **Google Calendar API** を有効化
 3. 「認証情報」→「認証情報を作成」→「OAuth クライアント ID」→ 種類は **デスクトップアプリ**
    （初回は同意画面の設定を求められる。User Type は「外部」＋テストユーザーに自分を追加）
-4. JSON をダウンロードして `credentials.json` として配置
-   （実行ファイルの隣 → カレントディレクトリ → `~/.config/habit-tracker/` の順で探す）
+4. JSON をダウンロードして `~/.config/habit/credentials.json` として配置
+   （`HABIT_CREDENTIALS_DIR` 環境変数でディレクトリを変更可能）
 
 > **注意**: `credentials.json` を公開リポジトリに push しないこと。
 
@@ -57,7 +57,7 @@ habit-tracker              # デフォルト習慣のheatmapが表示される
 
 ## ストレージ
 
-```
+```text
 ~/.config/habit/
 ├── token.json       # OAuthトークン
 └── config.json      # 習慣・カレンダー設定
@@ -86,7 +86,7 @@ habit-tracker              # デフォルト習慣のheatmapが表示される
 
 GitHub contributions グラフと同じレイアウト。列 = 週（左が過去）、行 = 曜日（上が日曜）。
 
-```
+```text
 筋トレ  🔥 12日連続
 
 

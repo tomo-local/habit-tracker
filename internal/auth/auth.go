@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"net/http"
@@ -30,11 +32,22 @@ func (a *auth) Authorize() (*oauth2.Token, error) {
 	port := listener.Addr().(*net.TCPAddr).Port
 	a.oauthConfig.RedirectURL = fmt.Sprintf("http://127.0.0.1:%d/callback", port)
 
+	stateBytes := make([]byte, 16)
+	if _, err := rand.Read(stateBytes); err != nil {
+		return nil, fmt.Errorf("generate state: %w", err)
+	}
+	state := hex.EncodeToString(stateBytes)
+
 	codeCh := make(chan string, 1)
 	errCh := make(chan error, 1)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("state") != state {
+			errCh <- fmt.Errorf("state mismatch: possible CSRF attack")
+			http.Error(w, "state mismatch", http.StatusBadRequest)
+			return
+		}
 		code := r.URL.Query().Get("code")
 		if code == "" {
 			errCh <- fmt.Errorf("no code in callback")
@@ -48,7 +61,7 @@ func (a *auth) Authorize() (*oauth2.Token, error) {
 	go srv.Serve(listener)
 	defer srv.Close()
 
-	authURL := a.oauthConfig.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	authURL := a.oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	fmt.Println("Open this URL to authorize:", authURL)
 	openBrowser(authURL)
 

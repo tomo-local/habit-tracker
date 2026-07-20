@@ -45,13 +45,23 @@ func (c *Config) Write() error {
 	if err := os.MkdirAll(ConfigDir(), 0700); err != nil {
 		return err
 	}
-	tmpFile := filepath.Join(ConfigDir(), "config.json.tmp")
-	file, err := json.MarshalIndent(c, "", "  ")
+	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(tmpFile, file, 0600); err != nil {
+	tmp, err := os.CreateTemp(ConfigDir(), "config.json.*.tmp")
+	if err != nil {
 		return err
 	}
-	return os.Rename(tmpFile, filepath.Join(ConfigDir(), "config.json"))
+	tmpPath := tmp.Name()
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		os.Remove(tmpPath)
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmpPath)
+		return err
+	}
+	return os.Rename(tmpPath, filepath.Join(ConfigDir(), "config.json"))
 }

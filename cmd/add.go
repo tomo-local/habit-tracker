@@ -33,7 +33,7 @@ func RunAdd(args []string) error {
 
 	var habits []string
 	if fs.NArg() > 0 {
-		habits = []string{fs.Arg(0)}
+		habits = fs.Args()
 	} else {
 		habits, err = selectHabits(cfg.Habits)
 		if err != nil {

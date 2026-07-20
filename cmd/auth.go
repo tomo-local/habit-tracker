@@ -36,7 +36,7 @@ func RunAuth(args []string) error {
 		return err
 	}
 
-	f, err := os.Create(config.TokenPath())
+	f, err := os.OpenFile(config.TokenPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}

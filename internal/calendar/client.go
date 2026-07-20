@@ -31,14 +31,22 @@ func (c *client) AddEvent(calendarID, title string, duration time.Duration) erro
 }
 
 func (c *client) GetEvents(calendarID string, start, end time.Time) ([]*Event, error) {
-	resp, err := c.svc.Events.List(calendarID).
+	var allItems []*gcal.Event
+	req := c.svc.Events.List(calendarID).
 		TimeMin(start.Format(time.RFC3339)).
 		TimeMax(end.Format(time.RFC3339)).
 		SingleEvents(true).
-		OrderBy("startTime").
-		Do()
-	if err != nil {
-		return nil, err
+		OrderBy("startTime")
+	for {
+		resp, err := req.Do()
+		if err != nil {
+			return nil, err
+		}
+		allItems = append(allItems, resp.Items...)
+		if resp.NextPageToken == "" {
+			break
+		}
+		req = req.PageToken(resp.NextPageToken)
 	}
-	return toEvents(resp.Items), nil
+	return toEvents(allItems), nil
 }

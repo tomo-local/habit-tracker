@@ -30,7 +30,7 @@ func RunView(args []string) error {
 	}
 
 	now := time.Now()
-	events, err := cal.GetEvents(cfg.CalendarID, now.AddDate(0, 0, -52*7), now)
+	events, err := cal.GetEvents(cfg.CalendarID, now.AddDate(0, 0, -52*7), now.AddDate(0, 0, 1))
 	if err != nil {
 		return fmt.Errorf("get events: %w", err)
 	}

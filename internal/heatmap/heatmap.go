@@ -8,7 +8,7 @@ import (
 var dayLabels = []string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}
 
 func Render(counts map[string]int, now time.Time) {
-	start := now.AddDate(0, 0, -(52*7 - 1))
+	start := now.AddDate(0, 0, -51*7)
 	for start.Weekday() != time.Sunday {
 		start = start.AddDate(0, 0, -1)
 	}

@@ -28,6 +28,10 @@ func toEvents(items []*gcal.Event) []*Event {
 }
 
 func toEvent(item *gcal.Event) *Event {
+	if item.Start == nil {
+		return nil
+	}
+
 	var start time.Time
 	var err error
 

@@ -38,12 +38,13 @@ func Test_Authorize(t *testing.T) {
 			openBrowser = func(authURL string) {
 				u, _ := url.Parse(authURL)
 				redirectURI := u.Query().Get("redirect_uri")
+				state := u.Query().Get("state")
 				go func() {
 					time.Sleep(20 * time.Millisecond)
 					if tt.code != "" {
-						http.Get(redirectURI + "?code=" + tt.code)
+						http.Get(redirectURI + "?code=" + tt.code + "&state=" + state)
 					} else {
-						http.Get(redirectURI)
+						http.Get(redirectURI + "?state=" + state)
 					}
 				}()
 			}
