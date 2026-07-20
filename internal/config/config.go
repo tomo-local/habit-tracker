@@ -54,13 +54,13 @@ func (c *Config) Write() error {
 		return err
 	}
 	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
+
 	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		os.Remove(tmpPath)
+		_ = tmp.Close()
 		return err
 	}
 	if err := tmp.Close(); err != nil {
-		os.Remove(tmpPath)
 		return err
 	}
 	return os.Rename(tmpPath, filepath.Join(ConfigDir(), "config.json"))
