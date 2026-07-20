@@ -32,6 +32,7 @@ const (
 	colorLight  = 1
 	colorMedium = 2
 	colorDark   = 3
+	colorMax    = 4
 )
 
 // colorThresholds defines minute thresholds in ascending order (30m, 60m, 120m)
@@ -42,13 +43,17 @@ var colorCodes = map[int]int{
 	colorLight:  22,
 	colorMedium: 34,
 	colorDark:   46,
+	colorMax:    82,
 }
 
 func colorBlock(minutes int) string {
-	level := colorNone
+	if minutes == 0 {
+		return fmt.Sprintf("\033[48;5;%dm  \033[0m", colorCodes[colorNone])
+	}
+	level := colorLight // any >0 gets at least colorLight
 	for i, threshold := range colorThresholds {
 		if minutes >= threshold {
-			level = i + 1
+			level = i + 2 // 30m→colorMedium, 60m→colorDark, 120m→colorMax
 		}
 	}
 	return fmt.Sprintf("\033[48;5;%dm  \033[0m", colorCodes[level])
