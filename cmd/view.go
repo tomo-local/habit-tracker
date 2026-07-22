@@ -1,15 +1,19 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"habit-tracker/internal/config"
 	"habit-tracker/internal/heatmap"
 )
 
-func RunView(args []string) error {
+func RunView(args []string, isDefault bool) error {
 	cfg, err := config.New()
 	if err != nil {
 		return err
@@ -18,9 +22,16 @@ func RunView(args []string) error {
 		return fmt.Errorf("no habits configured (run setup first)")
 	}
 
-	habitName := cfg.Habits[0]
-	if len(args) > 0 {
-		habitName = args[0]
+	var habitName string
+
+	if isDefault {
+		habitName = cfg.Habits[0]
+	} else {
+		habit, err := selectHabit(cfg.Habits)
+		if err != nil {
+			return err
+		}
+		habitName = habit
 	}
 
 	ctx := context.Background()
@@ -48,6 +59,27 @@ func RunView(args []string) error {
 	fmt.Printf("%s  🔥 %d day streak\n\n", habitName, streak)
 	heatmap.Render(counts, now)
 	return nil
+}
+
+func selectHabit(habits []string) (string, error) {
+	if len(habits) == 0 {
+		return "", fmt.Errorf("no habits configured (run setup first)")
+	}
+	for i, h := range habits {
+		fmt.Printf("  %d) %s\n", i+1, h)
+	}
+	fmt.Print("Select (comma-separated): ")
+
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	part := scanner.Text()
+
+	n, err := strconv.Atoi(strings.TrimSpace(part))
+	if err != nil || n < 1 || n > len(habits) {
+		return "", fmt.Errorf("invalid selection: %q", n)
+	}
+
+	return habits[n-1], nil
 }
 
 func calcStreak(counts map[string]int, now time.Time) int {

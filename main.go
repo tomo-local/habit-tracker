@@ -18,8 +18,10 @@ func main() {
 
 	var err error
 	switch command {
-	case "", "view":
-		err = cmd.RunView(args)
+	case "":
+		err = cmd.RunView(args, true)
+	case "view":
+		err = cmd.RunView(args, false)
 	case "auth":
 		err = cmd.RunAuth(args)
 	case "setup":
