@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -10,49 +9,41 @@ import (
 	"strings"
 	"time"
 
-	"habit-tracker/internal/config"
 	"habit-tracker/internal/heatmap"
 )
 
-func RunView(args []string, isDefault bool) error {
+func (c *Cmd) RunView(args []string, isDefault bool) error {
 	fs := flag.NewFlagSet("view", flag.ContinueOnError)
-	weeks := fs.Int("weeks", 0, "number of weeks to display (default: config value or 52)")
+	weeks := fs.Int("w", 0, "number of weeks to display (default: config value or 52)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 
-	cfg, err := config.New()
-	if err != nil {
+	if err := c.setup(); err != nil {
 		return err
 	}
-	if len(cfg.Habits) == 0 {
+
+	if len(c.cfg.Habits) == 0 {
 		return fmt.Errorf("no habits configured (run setup first)")
 	}
 
 	if *weeks <= 0 {
-		*weeks = cfg.Weeks()
+		*weeks = c.cfg.Weeks()
 	}
 
 	var habitName string
-
 	if isDefault {
-		habitName = cfg.Habits[0]
+		habitName = c.cfg.Habits[0]
 	} else {
-		habit, err := selectHabit(cfg.Habits)
+		habit, err := selectHabit(c.cfg.Habits)
 		if err != nil {
 			return err
 		}
 		habitName = habit
 	}
 
-	ctx := context.Background()
-	cal, err := newCalendarClient(ctx)
-	if err != nil {
-		return err
-	}
-
 	now := time.Now()
-	events, err := cal.GetEvents(cfg.CalendarID, now.AddDate(0, 0, -*weeks*7), now.AddDate(0, 0, 1))
+	events, err := c.cal.GetEvents(c.cfg.CalendarID, now.AddDate(0, 0, -*weeks*7), now.AddDate(0, 0, 1))
 	if err != nil {
 		return fmt.Errorf("get events: %w", err)
 	}

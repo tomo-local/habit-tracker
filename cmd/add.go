@@ -2,47 +2,38 @@ package cmd
 
 import (
 	"bufio"
-	"context"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	"habit-tracker/internal/config"
 )
 
-func RunAdd(args []string) error {
+func (c *Cmd) RunAdd(args []string) error {
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
 	duration := fs.Int("d", 30, "duration in minutes")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 
-	ctx := context.Background()
-	cal, err := newCalendarClient(ctx)
-	if err != nil {
-		return err
-	}
-
-	cfg, err := config.New()
-	if err != nil {
+	if err := c.setup(); err != nil {
 		return err
 	}
 
 	var habits []string
+	var err error
 	if fs.NArg() > 0 {
 		habits = fs.Args()
 	} else {
-		habits, err = selectHabits(cfg.Habits)
+		habits, err = selectHabits(c.cfg.Habits)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, h := range habits {
-		if err := cal.AddEvent(cfg.CalendarID, h, time.Duration(*duration)*time.Minute); err != nil {
+		if err := c.cal.AddEvent(c.cfg.CalendarID, h, time.Duration(*duration)*time.Minute); err != nil {
 			return fmt.Errorf("add event %q: %w", h, err)
 		}
 		fmt.Printf("Added: %s\n", h)

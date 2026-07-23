@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,9 +10,8 @@ import (
 	"habit-tracker/internal/config"
 )
 
-func RunSetup(args []string) error {
-	ctx := context.Background()
-	cal, err := newCalendarClient(ctx)
+func (c *Cmd) RunSetup(args []string) error {
+	cal, err := c.newCalendarClient()
 	if err != nil {
 		return err
 	}

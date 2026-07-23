@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -8,6 +9,7 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
 	args := os.Args[1:]
 
 	var command string
@@ -16,18 +18,20 @@ func main() {
 		args = args[1:]
 	}
 
+	c := cmd.New(ctx)
+
 	var err error
 	switch command {
 	case "":
-		err = cmd.RunView(args, true)
+		err = c.RunView(args, true)
 	case "view":
-		err = cmd.RunView(args, false)
+		err = c.RunView(args, false)
 	case "auth":
-		err = cmd.RunAuth(args)
+		err = c.RunAuth(args)
 	case "setup":
-		err = cmd.RunSetup(args)
+		err = c.RunSetup(args)
 	case "add":
-		err = cmd.RunAdd(args)
+		err = c.RunAdd(args)
 	case "-h", "--help", "help":
 		showHelp()
 		os.Exit(0)
