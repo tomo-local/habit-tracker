@@ -1,14 +1,14 @@
 package config
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/oauth2"
 )
 
-var (
-	habitConfigDir = "HABIT_CONFIG_DIR"
-	credentialsEnv = "HABIT_CREDENTIALS_DIR"
-)
+var habitConfigDir = "HABIT_CONFIG_DIR"
 
 func ConfigDir() string {
 	if envPath := os.Getenv(habitConfigDir); envPath != "" {
@@ -23,10 +23,22 @@ func TokenPath() string {
 	return filepath.Join(ConfigDir(), "token.json")
 }
 
-func CredentialsPath() (string, error) {
-	if envPath := os.Getenv(credentialsEnv); envPath != "" {
-		return filepath.Join(envPath, "credentials.json"), nil
-	}
+func (c *Config) ClientID() string {
+	return os.Getenv("HABIT_CLIENT_ID")
+}
 
-	return filepath.Join(ConfigDir(), "credentials.json"), nil
+func (c *Config) ClientSecret() string {
+	return os.Getenv("HABIT_CLIENT_SECRET")
+}
+
+func (c *Config) LoadToken() (*oauth2.Token, error) {
+	b, err := os.ReadFile(TokenPath())
+	if err != nil {
+		return nil, err
+	}
+	var token oauth2.Token
+	if err := json.Unmarshal(b, &token); err != nil {
+		return nil, err
+	}
+	return &token, nil
 }

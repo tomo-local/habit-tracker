@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	gcal "google.golang.org/api/calendar/v3"
 
@@ -17,17 +18,11 @@ func (c *Cmd) RunAuth(args []string) error {
 		return fmt.Errorf("usage: habit-tracker auth login")
 	}
 
-	credPath, err := config.CredentialsPath()
-	if err != nil {
-		return err
-	}
-	credBytes, err := os.ReadFile(credPath)
-	if err != nil {
-		return err
-	}
-	oauthCfg, err := google.ConfigFromJSON(credBytes, gcal.CalendarScope)
-	if err != nil {
-		return err
+	oauthCfg := &oauth2.Config{
+		ClientID:     c.cfg.ClientID(),
+		ClientSecret: c.cfg.ClientSecret(),
+		Endpoint:     google.Endpoint,
+		Scopes:       []string{gcal.CalendarScope},
 	}
 
 	a := auth.New(oauthCfg)

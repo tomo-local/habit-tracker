@@ -20,7 +20,7 @@ func main() {
 		args = args[1:]
 	}
 
-	c := cmd.New(ctx, config.New(), calendar.New(ctx))
+	c := cmd.New(ctx, config.New(), calendar.New())
 
 	var err error
 	switch command {

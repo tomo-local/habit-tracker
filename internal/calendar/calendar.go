@@ -9,19 +9,17 @@ import (
 )
 
 type Calendar interface {
-	GetClient(ts oauth2.TokenSource) (Client, error)
+	GetClient(ctx context.Context, oauthCfg *oauth2.Config, token *oauth2.Token) (Client, error)
 }
 
-type service struct {
-	ctx context.Context
+type service struct{}
+
+func New() Calendar {
+	return &service{}
 }
 
-func New(ctx context.Context) Calendar {
-	return &service{ctx: ctx}
-}
-
-func (s *service) GetClient(ts oauth2.TokenSource) (Client, error) {
-	svc, err := gcal.NewService(s.ctx, option.WithTokenSource(ts))
+func (s *service) GetClient(ctx context.Context, oauthCfg *oauth2.Config, token *oauth2.Token) (Client, error) {
+	svc, err := gcal.NewService(ctx, option.WithTokenSource(oauthCfg.TokenSource(ctx, token)))
 	if err != nil {
 		return nil, err
 	}

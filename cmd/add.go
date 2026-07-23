@@ -8,6 +8,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	gcal "google.golang.org/api/calendar/v3"
 )
 
 func (c *Cmd) RunAdd(args []string) error {
@@ -32,7 +36,17 @@ func (c *Cmd) RunAdd(args []string) error {
 		}
 	}
 
-	client, err := c.getClient()
+	token, err := c.cfg.LoadToken()
+	if err != nil {
+		return fmt.Errorf("read token (run auth login first): %w", err)
+	}
+	oauthCfg := &oauth2.Config{
+		ClientID:     c.cfg.ClientID(),
+		ClientSecret: c.cfg.ClientSecret(),
+		Endpoint:     google.Endpoint,
+		Scopes:       []string{gcal.CalendarScope},
+	}
+	client, err := c.cal.GetClient(c.ctx, oauthCfg, token)
 	if err != nil {
 		return err
 	}
