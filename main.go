@@ -28,8 +28,11 @@ func main() {
 		err = cmd.RunSetup(args)
 	case "add":
 		err = cmd.RunAdd(args)
+	case "-h", "--help", "help":
+		showHelp()
+		os.Exit(0)
 	default:
-		fmt.Fprintf(os.Stderr, "unknown command: %q\nusage: habit-tracker [view|auth|setup|add]\n", command)
+		fmt.Fprintf(os.Stderr, "unknown command: %q\nRun 'habit-tracker --help' for usage.\n", command)
 		os.Exit(1)
 	}
 
@@ -37,4 +40,18 @@ func main() {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
+}
+
+func showHelp() {
+	fmt.Fprint(os.Stderr, `Usage: habit-tracker [command] [options]
+
+Commands:
+  (none)          Show heatmap for the first habit (no interactive selection)
+  view            Select a habit and show its heatmap
+  add [habit...]  Record today's habit
+  setup           Select a calendar and register habit names
+  auth login      Authenticate with your Google account
+  help            Show this help message
+  -h, --help      Show this help message
+`)
 }
