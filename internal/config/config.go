@@ -13,6 +13,14 @@ type Config struct {
 	CalendarID   string   `json:"calendar_id"`
 	CalendarName string   `json:"calendar_name,omitempty"`
 	Habits       []string `json:"habits"`
+	ViewWeek     int      `json:"view_week"`
+}
+
+func (c *Config) Weeks() int {
+	if c.ViewWeek <= 0 {
+		return 52
+	}
+	return c.ViewWeek
 }
 
 func New() (*Config, error) {

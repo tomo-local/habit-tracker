@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -14,12 +15,22 @@ import (
 )
 
 func RunView(args []string, isDefault bool) error {
+	fs := flag.NewFlagSet("view", flag.ContinueOnError)
+	weeks := fs.Int("weeks", 0, "number of weeks to display (default: config value or 52)")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+
 	cfg, err := config.New()
 	if err != nil {
 		return err
 	}
 	if len(cfg.Habits) == 0 {
 		return fmt.Errorf("no habits configured (run setup first)")
+	}
+
+	if *weeks <= 0 {
+		*weeks = cfg.Weeks()
 	}
 
 	var habitName string
@@ -41,7 +52,7 @@ func RunView(args []string, isDefault bool) error {
 	}
 
 	now := time.Now()
-	events, err := cal.GetEvents(cfg.CalendarID, now.AddDate(0, 0, -52*7), now.AddDate(0, 0, 1))
+	events, err := cal.GetEvents(cfg.CalendarID, now.AddDate(0, 0, -*weeks*7), now.AddDate(0, 0, 1))
 	if err != nil {
 		return fmt.Errorf("get events: %w", err)
 	}
@@ -57,7 +68,7 @@ func RunView(args []string, isDefault bool) error {
 
 	streak := calcStreak(counts, now)
 	fmt.Printf("%s  🔥 %d day streak\n\n", habitName, streak)
-	heatmap.Render(counts, now)
+	heatmap.Render(counts, now, *weeks)
 	return nil
 }
 

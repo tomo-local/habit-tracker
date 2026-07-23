@@ -7,15 +7,42 @@ import (
 
 var dayLabels = []string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}
 
-func Render(counts map[string]int, now time.Time) {
-	start := now.AddDate(0, 0, -51*7)
+func renderMonthRow(start, now time.Time, weeks int) {
+	buf := make([]byte, weeks*2)
+	for i := range buf {
+		buf[i] = ' '
+	}
+	lastMonth := time.Month(0)
+	for week := 0; week < weeks; week++ {
+		d := start.AddDate(0, 0, week*7)
+		if d.After(now) {
+			break
+		}
+		if d.Month() != lastMonth {
+			label := []byte(d.Format("Jan"))
+			pos := week * 2
+			for i, c := range label {
+				if pos+i < len(buf) {
+					buf[pos+i] = c
+				}
+			}
+			lastMonth = d.Month()
+		}
+	}
+	fmt.Printf("     %s\n", buf)
+}
+
+func Render(counts map[string]int, now time.Time, weeks int) {
+	start := now.AddDate(0, 0, -(weeks-1)*7)
 	for start.Weekday() != time.Sunday {
 		start = start.AddDate(0, 0, -1)
 	}
 
+	renderMonthRow(start, now, weeks)
+
 	for wd := 0; wd < 7; wd++ {
 		fmt.Printf("%s  ", dayLabels[wd])
-		for week := 0; week < 52; week++ {
+		for week := 0; week < weeks; week++ {
 			d := start.AddDate(0, 0, week*7+wd)
 			if d.After(now) {
 				fmt.Print("  ")
