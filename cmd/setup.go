@@ -11,7 +11,7 @@ import (
 )
 
 func (c *Cmd) RunSetup(args []string) error {
-	cal, err := c.newCalendarClient()
+	cal, err := c.getClient()
 	if err != nil {
 		return err
 	}

@@ -23,13 +23,8 @@ func (c *Config) Weeks() int {
 	return c.ViewWeek
 }
 
-func New() (*Config, error) {
-	c := &Config{}
-	if err := c.Read(); err != nil {
-		return nil, err
-	}
-
-	return c, nil
+func New() *Config {
+	return &Config{}
 }
 
 func (c *Config) Read() error {

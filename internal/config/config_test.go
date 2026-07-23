@@ -15,8 +15,8 @@ func withTempDir(t *testing.T) {
 func Test_New_FileNotExist(t *testing.T) {
 	withTempDir(t)
 
-	cfg, err := New()
-	if err != nil {
+	cfg := New()
+	if err := cfg.Read(); err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 	if cfg.CalendarID != "" || len(cfg.Habits) != 0 {
@@ -36,9 +36,9 @@ func Test_Write_RoundTrip(t *testing.T) {
 		t.Fatalf("Write: %v", err)
 	}
 
-	got, err := New()
-	if err != nil {
-		t.Fatalf("New: %v", err)
+	got := New()
+	if err := got.Read(); err != nil {
+		t.Fatalf("Read: %v", err)
 	}
 	if got.CalendarID != original.CalendarID {
 		t.Errorf("CalendarID: got %q, want %q", got.CalendarID, original.CalendarID)

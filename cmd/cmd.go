@@ -20,25 +20,11 @@ type Cmd struct {
 	cal calendar.Calendar
 }
 
-func New(ctx context.Context) *Cmd {
-	return &Cmd{ctx: ctx}
+func New(ctx context.Context, cfg *config.Config, cal calendar.Calendar) *Cmd {
+	return &Cmd{ctx: ctx, cfg: cfg, cal: cal}
 }
 
-func (c *Cmd) setup() error {
-	cfg, err := config.New()
-	if err != nil {
-		return err
-	}
-	cal, err := c.newCalendarClient()
-	if err != nil {
-		return err
-	}
-	c.cfg = cfg
-	c.cal = cal
-	return nil
-}
-
-func (c *Cmd) newCalendarClient() (calendar.Calendar, error) {
+func (c *Cmd) getClient() (calendar.Client, error) {
 	credPath, err := config.CredentialsPath()
 	if err != nil {
 		return nil, err
@@ -59,5 +45,5 @@ func (c *Cmd) newCalendarClient() (calendar.Calendar, error) {
 	if err := json.Unmarshal(tokenBytes, &token); err != nil {
 		return nil, fmt.Errorf("parse token: %w", err)
 	}
-	return calendar.New(c.ctx, oauthCfg.TokenSource(c.ctx, &token))
+	return c.cal.GetClient(oauthCfg.TokenSource(c.ctx, &token))
 }

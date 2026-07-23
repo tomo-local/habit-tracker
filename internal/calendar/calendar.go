@@ -2,7 +2,6 @@ package calendar
 
 import (
 	"context"
-	"time"
 
 	"golang.org/x/oauth2"
 	gcal "google.golang.org/api/calendar/v3"
@@ -10,13 +9,19 @@ import (
 )
 
 type Calendar interface {
-	ListCalendars() ([]*CalendarEntry, error)
-	AddEvent(calendarID, title string, duration time.Duration) error
-	GetEvents(calendarID string, start, end time.Time) ([]*Event, error)
+	GetClient(ts oauth2.TokenSource) (Client, error)
 }
 
-func New(ctx context.Context, ts oauth2.TokenSource) (Calendar, error) {
-	svc, err := gcal.NewService(ctx, option.WithTokenSource(ts))
+type service struct {
+	ctx context.Context
+}
+
+func New(ctx context.Context) Calendar {
+	return &service{ctx: ctx}
+}
+
+func (s *service) GetClient(ts oauth2.TokenSource) (Client, error) {
+	svc, err := gcal.NewService(s.ctx, option.WithTokenSource(ts))
 	if err != nil {
 		return nil, err
 	}

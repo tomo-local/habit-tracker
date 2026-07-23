@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"habit-tracker/cmd"
+	"habit-tracker/internal/calendar"
+	"habit-tracker/internal/config"
 )
 
 func main() {
@@ -18,7 +20,7 @@ func main() {
 		args = args[1:]
 	}
 
-	c := cmd.New(ctx)
+	c := cmd.New(ctx, config.New(), calendar.New(ctx))
 
 	var err error
 	switch command {
