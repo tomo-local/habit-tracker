@@ -9,6 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	gcal "google.golang.org/api/calendar/v3"
+
 	"habit-tracker/internal/heatmap"
 )
 
@@ -19,7 +23,7 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 		return err
 	}
 
-	if err := c.setup(); err != nil {
+	if err := c.cfg.Read(); err != nil {
 		return err
 	}
 
@@ -42,8 +46,23 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 		habitName = habit
 	}
 
+	token, err := c.cfg.LoadToken()
+	if err != nil {
+		return fmt.Errorf("read token (run auth login first): %w", err)
+	}
+	oauthCfg := &oauth2.Config{
+		ClientID:     c.cfg.ClientID(),
+		ClientSecret: c.cfg.ClientSecret(),
+		Endpoint:     google.Endpoint,
+		Scopes:       []string{gcal.CalendarScope},
+	}
+	client, err := c.cal.GetClient(c.ctx, oauthCfg, token)
+	if err != nil {
+		return err
+	}
+
 	now := time.Now()
-	events, err := c.cal.GetEvents(c.cfg.CalendarID, now.AddDate(0, 0, -*weeks*7), now.AddDate(0, 0, 1))
+	events, err := client.GetEvents(c.cfg.CalendarID, now.AddDate(0, 0, -*weeks*7), now.AddDate(0, 0, 1))
 	if err != nil {
 		return fmt.Errorf("get events: %w", err)
 	}

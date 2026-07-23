@@ -8,6 +8,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	gcal "google.golang.org/api/calendar/v3"
 )
 
 func (c *Cmd) RunAdd(args []string) error {
@@ -17,7 +21,7 @@ func (c *Cmd) RunAdd(args []string) error {
 		return err
 	}
 
-	if err := c.setup(); err != nil {
+	if err := c.cfg.Read(); err != nil {
 		return err
 	}
 
@@ -32,8 +36,23 @@ func (c *Cmd) RunAdd(args []string) error {
 		}
 	}
 
+	token, err := c.cfg.LoadToken()
+	if err != nil {
+		return fmt.Errorf("read token (run auth login first): %w", err)
+	}
+	oauthCfg := &oauth2.Config{
+		ClientID:     c.cfg.ClientID(),
+		ClientSecret: c.cfg.ClientSecret(),
+		Endpoint:     google.Endpoint,
+		Scopes:       []string{gcal.CalendarScope},
+	}
+	client, err := c.cal.GetClient(c.ctx, oauthCfg, token)
+	if err != nil {
+		return err
+	}
+
 	for _, h := range habits {
-		if err := c.cal.AddEvent(c.cfg.CalendarID, h, time.Duration(*duration)*time.Minute); err != nil {
+		if err := client.AddEvent(c.cfg.CalendarID, h, time.Duration(*duration)*time.Minute); err != nil {
 			return fmt.Errorf("add event %q: %w", h, err)
 		}
 		fmt.Printf("Added: %s\n", h)

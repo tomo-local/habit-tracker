@@ -6,6 +6,12 @@ import (
 	gcal "google.golang.org/api/calendar/v3"
 )
 
+type Client interface {
+	ListCalendars() ([]*CalendarEntry, error)
+	AddEvent(calendarID, title string, duration time.Duration) error
+	GetEvents(calendarID string, start, end time.Time) ([]*Event, error)
+}
+
 type client struct {
 	svc *gcal.Service
 }

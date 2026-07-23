@@ -16,20 +16,15 @@ type Config struct {
 	ViewWeek     int      `json:"view_week"`
 }
 
+func New() *Config {
+	return &Config{}
+}
+
 func (c *Config) Weeks() int {
 	if c.ViewWeek <= 0 {
 		return 52
 	}
 	return c.ViewWeek
-}
-
-func New() (*Config, error) {
-	c := &Config{}
-	if err := c.Read(); err != nil {
-		return nil, err
-	}
-
-	return c, nil
 }
 
 func (c *Config) Read() error {
