@@ -36,6 +36,19 @@ func (c *Cmd) RunAdd(args []string) error {
 		}
 	}
 
+	dSet := false
+	fs.Visit(func(f *flag.Flag) {
+		if f.Name == "d" {
+			dSet = true
+		}
+	})
+	if !dSet {
+		*duration, err = selectDuration()
+		if err != nil {
+			return err
+		}
+	}
+
 	token, err := c.cfg.LoadToken()
 	if err != nil {
 		return fmt.Errorf("read token (run auth login first): %w", err)
@@ -55,9 +68,37 @@ func (c *Cmd) RunAdd(args []string) error {
 		if err := client.AddEvent(c.cfg.CalendarID, h, time.Duration(*duration)*time.Minute); err != nil {
 			return fmt.Errorf("add event %q: %w", h, err)
 		}
-		fmt.Printf("Added: %s\n", h)
+		fmt.Printf("Added: %s %dm\n", h, *duration)
 	}
 	return nil
+}
+
+var durationOptions = []int{5, 10, 15, 30}
+
+const defaultDurationIndex = 3 // durationOptions[3] == 30
+
+func selectDuration() (int, error) {
+	for i, d := range durationOptions {
+		mark := ""
+		if i == defaultDurationIndex {
+			mark = " (default)"
+		}
+		fmt.Printf("  %d) %dm%s\n", i+1, d, mark)
+	}
+	fmt.Print("Duration: ")
+
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	text := strings.TrimSpace(scanner.Text())
+	if text == "" {
+		return durationOptions[defaultDurationIndex], nil
+	}
+
+	n, err := strconv.Atoi(text)
+	if err != nil || n < 1 || n > len(durationOptions) {
+		return 0, fmt.Errorf("invalid selection: %q", text)
+	}
+	return durationOptions[n-1], nil
 }
 
 func selectHabits(habits []string) ([]string, error) {
