@@ -1,12 +1,9 @@
 package cmd
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -19,6 +16,19 @@ import (
 func (c *Cmd) RunView(args []string, isDefault bool) error {
 	fs := flag.NewFlagSet("view", flag.ContinueOnError)
 	weeks := fs.Int("w", 0, "number of weeks to display (default: config value or 52)")
+	fs.Usage = func() {
+		fmt.Fprint(os.Stderr, `Usage: habit-tracker view [options]
+
+Select a habit and show its heatmap.
+
+Options:
+  -w <weeks>  Number of weeks to display (default: config value, or 52)
+
+Examples:
+  habit-tracker view          # select a habit and show its heatmap
+  habit-tracker view -w 26    # show the last 26 weeks
+`)
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -39,7 +49,7 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 	if isDefault {
 		habitName = c.cfg.Habits[0]
 	} else {
-		habit, err := selectHabit(c.cfg.Habits)
+		habit, err := c.selectHabit(c.cfg.Habits)
 		if err != nil {
 			return err
 		}
@@ -82,25 +92,11 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 	return nil
 }
 
-func selectHabit(habits []string) (string, error) {
+func (c *Cmd) selectHabit(habits []string) (string, error) {
 	if len(habits) == 0 {
 		return "", fmt.Errorf("no habits configured (run setup first)")
 	}
-	for i, h := range habits {
-		fmt.Printf("  %d) %s\n", i+1, h)
-	}
-	fmt.Print("Select (comma-separated): ")
-
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	part := scanner.Text()
-
-	n, err := strconv.Atoi(strings.TrimSpace(part))
-	if err != nil || n < 1 || n > len(habits) {
-		return "", fmt.Errorf("invalid selection: %q", n)
-	}
-
-	return habits[n-1], nil
+	return c.prompt.Select("Select a habit:", habits, "")
 }
 
 func calcStreak(counts map[string]int, now time.Time) int {

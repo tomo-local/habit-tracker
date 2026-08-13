@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"errors"
+	"flag"
 	"fmt"
 	"os"
 
 	"habit-tracker/cmd"
 	"habit-tracker/internal/calendar"
 	"habit-tracker/internal/config"
+	"habit-tracker/internal/prompt/huh"
 )
 
 func main() {
@@ -20,7 +23,7 @@ func main() {
 		args = args[1:]
 	}
 
-	c := cmd.New(ctx, config.New(), calendar.New())
+	c := cmd.New(ctx, config.New(), calendar.New(), huh.New())
 
 	var err error
 	switch command {
@@ -43,21 +46,35 @@ func main() {
 	}
 
 	if err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			// Usage was already printed by the subcommand's FlagSet.
+			os.Exit(0)
+		}
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
 }
 
 func showHelp() {
-	fmt.Fprint(os.Stderr, `Usage: habit-tracker [command] [options]
+	fmt.Fprint(os.Stderr, `habit-tracker: track daily habits via Google Calendar events
+
+Usage: habit-tracker [command] [options]
 
 Commands:
-  (none)          Show heatmap for the first habit (no interactive selection)
-  view            Select a habit and show its heatmap
-  add [habit...]  Record today's habit
-  setup           Select a calendar and register habit names
-  auth login      Authenticate with your Google account
-  help            Show this help message
-  -h, --help      Show this help message
+  (none)            Show heatmap for the first habit (no interactive selection)
+  view [options]    Select a habit and show its heatmap
+  add [habit...]    Record today's habit
+  setup             Create/select a calendar and register habit names
+  auth login        Authenticate with your Google account
+  help              Show this help message
+  -h, --help        Show this help message
+
+Run 'habit-tracker <command> -h' for details and options of each command.
+
+Examples:
+  habit-tracker                 # show today's default habit heatmap
+  habit-tracker add             # record today's habit interactively
+  habit-tracker add Golang      # record "Golang" for the default duration
+  habit-tracker view -w 26      # show the last 26 weeks
 `)
 }

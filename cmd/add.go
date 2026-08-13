@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -16,7 +15,26 @@ import (
 
 func (c *Cmd) RunAdd(args []string) error {
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
-	duration := fs.Int("d", 30, "duration in minutes")
+	duration := fs.Int("d", defaultDuration, "duration in minutes")
+	fs.Usage = func() {
+		fmt.Fprint(os.Stderr, `Usage: habit-tracker add [habit...] [options]
+
+Record today's habit on the configured Google Calendar.
+
+Arguments:
+  habit...  Habit name(s) to record. If omitted, you'll be prompted to
+            select one interactively (or type a new one).
+
+Options:
+  -d <minutes>  Duration to record (default: 30). If omitted, you'll be
+                prompted to enter a value interactively.
+
+Examples:
+  habit-tracker add                  # select a habit and duration interactively
+  habit-tracker add Golang           # record "Golang" for 30 minutes
+  habit-tracker add Golang -d 60     # record "Golang" for 60 minutes
+`)
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -30,7 +48,7 @@ func (c *Cmd) RunAdd(args []string) error {
 	if fs.NArg() > 0 {
 		habits = fs.Args()
 	} else {
-		habits, err = selectHabits(c.cfg.Habits)
+		habits, err = c.selectHabits(c.cfg.Habits)
 		if err != nil {
 			return err
 		}
@@ -43,7 +61,7 @@ func (c *Cmd) RunAdd(args []string) error {
 		}
 	})
 	if !dSet {
-		*duration, err = selectDuration()
+		*duration, err = c.selectDuration()
 		if err != nil {
 			return err
 		}
@@ -73,54 +91,39 @@ func (c *Cmd) RunAdd(args []string) error {
 	return nil
 }
 
-var durationOptions = []int{5, 10, 15, 30}
-
-const defaultDurationIndex = 3 // durationOptions[3] == 30
-
-func selectDuration() (int, error) {
-	for i, d := range durationOptions {
-		mark := ""
-		if i == defaultDurationIndex {
-			mark = " (default)"
-		}
-		fmt.Printf("  %d) %dm%s\n", i+1, d, mark)
+func (c *Cmd) selectDuration() (int, error) {
+	text, err := c.prompt.Input("Duration (minutes):", strconv.Itoa(defaultDuration))
+	if err != nil {
+		return 0, err
 	}
-	fmt.Print("Duration: ")
-
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	text := strings.TrimSpace(scanner.Text())
-	if text == "" {
-		return durationOptions[defaultDurationIndex], nil
+	n, err := strconv.Atoi(strings.TrimSpace(text))
+	if err != nil {
+		return 0, fmt.Errorf("invalid duration: %q", text)
 	}
-
-	n, err := strconv.Atoi(text)
-	if err != nil || n < 1 || n > len(durationOptions) {
-		return 0, fmt.Errorf("invalid selection: %q", text)
-	}
-	return durationOptions[n-1], nil
+	return n, nil
 }
 
-func selectHabits(habits []string) ([]string, error) {
+func (c *Cmd) selectHabits(habits []string) ([]string, error) {
 	if len(habits) == 0 {
 		return nil, fmt.Errorf("no habits configured (run setup first)")
 	}
-	for i, h := range habits {
-		fmt.Printf("  %d) %s\n", i+1, h)
-	}
-	fmt.Print("Select (comma-separated): ")
 
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	parts := strings.Split(scanner.Text(), ",")
-
-	var selected []string
-	for _, p := range parts {
-		n, err := strconv.Atoi(strings.TrimSpace(p))
-		if err != nil || n < 1 || n > len(habits) {
-			return nil, fmt.Errorf("invalid selection: %q", p)
-		}
-		selected = append(selected, habits[n-1])
+	options := append(append([]string{}, habits...), optionNewHabit)
+	selected, err := c.prompt.Select("Select a habit:", options, "")
+	if err != nil {
+		return nil, err
 	}
-	return selected, nil
+	if selected != optionNewHabit {
+		return []string{selected}, nil
+	}
+
+	name, err := c.prompt.Input("Habit name:", "")
+	if err != nil {
+		return nil, err
+	}
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("habit name is empty")
+	}
+	return []string{name}, nil
 }
