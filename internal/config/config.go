@@ -6,14 +6,16 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 type Config struct {
 	mu           sync.RWMutex
-	CalendarID   string   `json:"calendar_id"`
-	CalendarName string   `json:"calendar_name,omitempty"`
-	Habits       []string `json:"habits"`
-	ViewWeek     int      `json:"view_week"`
+	CalendarID   string    `json:"calendar_id"`
+	CalendarName string    `json:"calendar_name,omitempty"`
+	Habits       []string  `json:"habits"`
+	ViewWeek     int       `json:"view_week"`
+	LastSyncedAt time.Time `json:"last_synced_at,omitempty"`
 }
 
 func New() *Config {

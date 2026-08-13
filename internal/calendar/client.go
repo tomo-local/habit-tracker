@@ -10,6 +10,7 @@ type Client interface {
 	ListCalendars() ([]*CalendarEntry, error)
 	CreateCalendar(summary string) (*CalendarEntry, error)
 	AddEvent(calendarID, title string, duration time.Duration) error
+	AddEventAt(calendarID, title, description string, start, end time.Time) error
 	GetEvents(calendarID string, start, end time.Time) ([]*Event, error)
 }
 
@@ -36,10 +37,15 @@ func (c *client) CreateCalendar(summary string) (*CalendarEntry, error) {
 func (c *client) AddEvent(calendarID, title string, duration time.Duration) error {
 	end := time.Now()
 	start := end.Add(-duration)
+	return c.AddEventAt(calendarID, title, "", start, end)
+}
+
+func (c *client) AddEventAt(calendarID, title, description string, start, end time.Time) error {
 	event := &gcal.Event{
-		Summary: title,
-		Start:   &gcal.EventDateTime{DateTime: start.Format(time.RFC3339)},
-		End:     &gcal.EventDateTime{DateTime: end.Format(time.RFC3339)},
+		Summary:     title,
+		Description: description,
+		Start:       &gcal.EventDateTime{DateTime: start.Format(time.RFC3339)},
+		End:         &gcal.EventDateTime{DateTime: end.Format(time.RFC3339)},
 	}
 	_, err := c.svc.Events.Insert(calendarID, event).Do()
 	return err

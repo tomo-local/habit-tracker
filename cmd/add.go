@@ -104,26 +104,35 @@ func (c *Cmd) selectDuration() (int, error) {
 }
 
 func (c *Cmd) selectHabits(habits []string) ([]string, error) {
+	name, err := c.selectOrNewHabit(habits)
+	if err != nil {
+		return nil, err
+	}
+	return []string{name}, nil
+}
+
+// selectOrNewHabit lets the user pick an existing habit or type a new one.
+func (c *Cmd) selectOrNewHabit(habits []string) (string, error) {
 	if len(habits) == 0 {
-		return nil, fmt.Errorf("no habits configured (run setup first)")
+		return "", fmt.Errorf("no habits configured (run setup first)")
 	}
 
 	options := append(append([]string{}, habits...), optionNewHabit)
 	selected, err := c.prompt.Select("Select a habit:", options, "")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if selected != optionNewHabit {
-		return []string{selected}, nil
+		return selected, nil
 	}
 
 	name, err := c.prompt.Input("Habit name:", "")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	name = strings.TrimSpace(name)
 	if name == "" {
-		return nil, fmt.Errorf("habit name is empty")
+		return "", fmt.Errorf("habit name is empty")
 	}
-	return []string{name}, nil
+	return name, nil
 }

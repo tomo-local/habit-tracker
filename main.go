@@ -37,6 +37,8 @@ func main() {
 		err = c.RunSetup(args)
 	case "add":
 		err = c.RunAdd(args)
+	case "sync":
+		err = c.RunSync(args)
 	case "-h", "--help", "help":
 		showHelp()
 		os.Exit(0)
@@ -64,6 +66,7 @@ Commands:
   (none)            Show heatmap for the first habit (no interactive selection)
   view [options]    Select a habit and show its heatmap
   add [habit...]    Record today's habit
+  sync              Back-fill events from Claude Code session logs
   setup             Create/select a calendar and register habit names
   auth login        Authenticate with your Google account
   help              Show this help message
@@ -76,5 +79,6 @@ Examples:
   habit-tracker add             # record today's habit interactively
   habit-tracker add Golang      # record "Golang" for the default duration
   habit-tracker view -w 26      # show the last 26 weeks
+  habit-tracker sync            # back-fill events from Claude Code sessions
 `)
 }
