@@ -7,9 +7,9 @@ import (
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	gcal "google.golang.org/api/calendar/v3"
 
 	"habit-tracker/internal/auth"
+	"habit-tracker/internal/calendar"
 	"habit-tracker/internal/config"
 )
 
@@ -22,7 +22,7 @@ func (c *Cmd) RunAuth(args []string) error {
 		ClientID:     c.cfg.ClientID(),
 		ClientSecret: c.cfg.ClientSecret(),
 		Endpoint:     google.Endpoint,
-		Scopes:       []string{gcal.CalendarScope},
+		Scopes:       calendar.Scopes,
 	}
 
 	a := auth.New(oauthCfg)

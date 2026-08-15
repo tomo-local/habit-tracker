@@ -8,8 +8,8 @@ import (
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	gcal "google.golang.org/api/calendar/v3"
 
+	"habit-tracker/internal/calendar"
 	"habit-tracker/internal/heatmap"
 )
 
@@ -64,7 +64,7 @@ Examples:
 		ClientID:     c.cfg.ClientID(),
 		ClientSecret: c.cfg.ClientSecret(),
 		Endpoint:     google.Endpoint,
-		Scopes:       []string{gcal.CalendarScope},
+		Scopes:       calendar.Scopes,
 	}
 	client, err := c.cal.GetClient(c.ctx, oauthCfg, token)
 	if err != nil {
