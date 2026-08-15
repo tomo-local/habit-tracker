@@ -1,5 +1,8 @@
 package config
 
+// env.go holds settings sourced from environment variables
+// (HABIT_CONFIG_DIR, HABIT_CLIENT_ID, HABIT_CLIENT_SECRET) rather than config.json.
+
 import (
 	"encoding/json"
 	"os"

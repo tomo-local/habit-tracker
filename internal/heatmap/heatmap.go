@@ -65,12 +65,13 @@ const (
 // colorThresholds defines minute thresholds in ascending order (30m, 60m, 120m)
 var colorThresholds = []int{30, 60, 120}
 
+// colorCodes maps each level to an ANSI 256-color background code.
 var colorCodes = map[int]int{
-	colorNone:   236,
-	colorLight:  22,
-	colorMedium: 34,
-	colorDark:   46,
-	colorMax:    82,
+	colorNone:   236, // near-black (no record)
+	colorLight:  22,  // dark green (>0m, below 30m threshold)
+	colorMedium: 34,  // medium green (30m+)
+	colorDark:   46,  // bright green (60m+)
+	colorMax:    82,  // brightest green (120m+)
 }
 
 func colorBlock(minutes int) string {
