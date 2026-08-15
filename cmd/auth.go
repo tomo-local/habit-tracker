@@ -31,6 +31,7 @@ func (c *Cmd) RunAuth(args []string) error {
 		return err
 	}
 
+	// Persist the obtained token so other commands can reuse it via c.cfg.LoadToken().
 	f, err := os.OpenFile(config.TokenPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
