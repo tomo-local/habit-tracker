@@ -18,13 +18,13 @@ func (c *Cmd) RunAdd(args []string) error {
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
 	duration := fs.Int("d", defaultDuration, "duration in minutes")
 	fs.Usage = func() {
-		fmt.Fprint(os.Stderr, `Usage: habit-tracker add [habit...] [options]
+		fmt.Fprint(os.Stderr, `Usage: habit-tracker add [habit] [options]
 
 Record today's habit on the configured Google Calendar.
 
 Arguments:
-  habit...  Habit name(s) to record. If omitted, you'll be prompted to
-            select one interactively (or type a new one).
+  habit  Habit name to record. If omitted, you'll be prompted to
+         select one interactively (or type a new one).
 
 Options:
   -d <minutes>  Duration to record (default: 30). If omitted, you'll be
@@ -39,29 +39,31 @@ Examples:
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
+	if fs.NArg() > 1 {
+		return fmt.Errorf("add takes at most one habit, got %d", fs.NArg())
+	}
 
 	if err := c.cfg.Read(); err != nil {
 		return err
 	}
 
-	var habits []string
+	var habit string
 	var err error
-	if fs.NArg() > 0 {
-		habits = fs.Args()
+	if fs.NArg() == 1 {
+		habit = fs.Arg(0)
 	} else {
-		habits, err = c.selectHabits(c.cfg.Habits)
+		habit, err = c.selectOrCreateHabit(c.cfg.Habits)
 		if err != nil {
 			return err
 		}
 	}
-
-	dSet := false
+	durationSet := false
 	fs.Visit(func(f *flag.Flag) {
 		if f.Name == "d" {
-			dSet = true
+			durationSet = true
 		}
 	})
-	if !dSet {
+	if !durationSet {
 		*duration, err = c.selectDuration()
 		if err != nil {
 			return err
@@ -82,13 +84,10 @@ Examples:
 	if err != nil {
 		return err
 	}
-
-	for _, h := range habits {
-		if err := client.AddEvent(c.cfg.CalendarID, h, time.Duration(*duration)*time.Minute); err != nil {
-			return fmt.Errorf("add event %q: %w", h, err)
-		}
-		fmt.Printf("Added: %s %dm\n", h, *duration)
+	if err := client.AddEvent(c.cfg.CalendarID, habit, time.Duration(*duration)*time.Minute); err != nil {
+		return fmt.Errorf("add event %q: %w", habit, err)
 	}
+	fmt.Printf("Added: %s %dm\n", habit, *duration)
 	return nil
 }
 
@@ -104,27 +103,27 @@ func (c *Cmd) selectDuration() (int, error) {
 	return n, nil
 }
 
-func (c *Cmd) selectHabits(habits []string) ([]string, error) {
+func (c *Cmd) selectOrCreateHabit(habits []string) (string, error) {
 	if len(habits) == 0 {
-		return nil, fmt.Errorf("no habits configured (run setup first)")
+		return "", fmt.Errorf("no habits configured (run setup first)")
 	}
 
 	options := append(append([]string{}, habits...), optionNewHabit)
 	selected, err := c.prompt.Select("Select a habit:", options, "")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if selected != optionNewHabit {
-		return []string{selected}, nil
+		return selected, nil
 	}
 
 	name, err := c.prompt.Input("Habit name:", "")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	name = strings.TrimSpace(name)
 	if name == "" {
-		return nil, fmt.Errorf("habit name is empty")
+		return "", fmt.Errorf("habit name is empty")
 	}
-	return []string{name}, nil
+	return name, nil
 }
