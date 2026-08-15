@@ -13,6 +13,12 @@ import (
 	"habit-tracker/internal/config"
 )
 
+const (
+	defaultNewCalendarName = "habit"
+	optionCreateCalendar   = "Create a new calendar"
+	optionSelectCalendar   = "Select an existing calendar"
+)
+
 func (c *Cmd) RunSetup(args []string) error {
 	token, err := c.cfg.LoadToken()
 	if err != nil {

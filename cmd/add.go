@@ -14,6 +14,11 @@ import (
 	"habit-tracker/internal/calendar"
 )
 
+const (
+	defaultDuration = 30
+	optionNewHabit  = "New habit"
+)
+
 func (c *Cmd) RunAdd(args []string) error {
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
 	duration := fs.Int("d", defaultDuration, "duration in minutes")
