@@ -17,17 +17,7 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 	fs := flag.NewFlagSet("view", flag.ContinueOnError)
 	weeks := fs.Int("w", 0, "number of weeks to display (default: config value or 52)")
 	fs.Usage = func() {
-		fmt.Fprint(os.Stderr, `Usage: habit-tracker view [options]
-
-Select a habit and show its heatmap.
-
-Options:
-  -w <weeks>  Number of weeks to display (default: config value, or 52)
-
-Examples:
-  habit-tracker view          # select a habit and show its heatmap
-  habit-tracker view -w 26    # show the last 26 weeks
-`)
+		showViewHelp()
 	}
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -110,4 +100,18 @@ func calcStreak(counts map[string]int, now time.Time) int {
 		d = d.AddDate(0, 0, -1)
 	}
 	return streak
+}
+
+func showViewHelp() {
+	fmt.Fprint(os.Stderr, `Usage: habit-tracker view [options]
+
+Select a habit and show its heatmap.
+
+Options:
+  -w <weeks>  Number of weeks to display (default: config value, or 52)
+
+Examples:
+  habit-tracker view          # select a habit and show its heatmap
+  habit-tracker view -w 26    # show the last 26 weeks
+`)
 }

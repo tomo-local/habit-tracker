@@ -18,23 +18,7 @@ func (c *Cmd) RunAdd(args []string) error {
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
 	duration := fs.Int("d", defaultDuration, "duration in minutes")
 	fs.Usage = func() {
-		fmt.Fprint(os.Stderr, `Usage: habit-tracker add [habit] [options]
-
-Record today's habit on the configured Google Calendar.
-
-Arguments:
-  habit  Habit name to record. If omitted, you'll be prompted to
-         select one interactively (or type a new one).
-
-Options:
-  -d <minutes>  Duration to record (default: 30). If omitted, you'll be
-                prompted to enter a value interactively.
-
-Examples:
-  habit-tracker add                  # select a habit and duration interactively
-  habit-tracker add Golang           # record "Golang" for 30 minutes
-  habit-tracker add Golang -d 60     # record "Golang" for 60 minutes
-`)
+		showAddHelp()
 	}
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -126,4 +110,24 @@ func (c *Cmd) selectOrCreateHabit(habits []string) (string, error) {
 		return "", fmt.Errorf("habit name is empty")
 	}
 	return name, nil
+}
+
+func showAddHelp() {
+	fmt.Fprint(os.Stderr, `Usage: habit-tracker add [habit] [options]
+
+Record today's habit on the configured Google Calendar.
+
+Arguments:
+  habit  Habit name to record. If omitted, you'll be prompted to
+         select one interactively (or type a new one).
+
+Options:
+  -d <minutes>  Duration to record (default: 30). If omitted, you'll be
+                prompted to enter a value interactively.
+
+Examples:
+  habit-tracker add                  # select a habit and duration interactively
+  habit-tracker add Golang           # record "Golang" for 30 minutes
+  habit-tracker add Golang -d 60     # record "Golang" for 60 minutes
+`)
 }
