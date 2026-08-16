@@ -25,24 +25,33 @@ func circleTheme() *charmhuh.Theme {
 	return t
 }
 
-func (p *prompter) Select(message string, options []string, defaultOption string) (string, error) {
-	result := defaultOption
+func (p *prompter) Select(message string, options []prompt.Option, defaultValue string) (prompt.Option, error) {
+	huhOptions := make([]charmhuh.Option[string], len(options))
+	result := defaultValue
 	if result == "" && len(options) > 0 {
-		result = options[0]
+		result = options[0].Value
+	}
+	for i, o := range options {
+		huhOptions[i] = charmhuh.NewOption(o.Label, o.Value)
 	}
 	err := charmhuh.NewForm(
 		charmhuh.NewGroup(
 			charmhuh.NewSelect[string]().
 				Title(message).
 				Description("/ to search").
-				Options(charmhuh.NewOptions(options...)...).
+				Options(huhOptions...).
 				Value(&result),
 		),
 	).WithTheme(circleTheme()).Run()
 	if err != nil {
-		return "", err
+		return prompt.Option{}, err
 	}
-	return result, nil
+	for _, o := range options {
+		if o.Value == result {
+			return o, nil
+		}
+	}
+	return prompt.Option{Value: result}, nil
 }
 
 func (p *prompter) MultiSelect(message string, options []string) ([]string, error) {

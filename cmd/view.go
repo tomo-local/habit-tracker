@@ -11,6 +11,7 @@ import (
 
 	"habit-tracker/internal/calendar"
 	"habit-tracker/internal/heatmap"
+	"habit-tracker/internal/prompt"
 )
 
 func (c *Cmd) RunView(args []string, isDefault bool) error {
@@ -86,7 +87,15 @@ func (c *Cmd) selectHabit(habits []string) (string, error) {
 	if len(habits) == 0 {
 		return "", fmt.Errorf("no habits configured (run setup first)")
 	}
-	return c.prompt.Select("Select a habit:", habits, "")
+	options := make([]prompt.Option, len(habits))
+	for i, h := range habits {
+		options[i] = prompt.Option{Label: h, Value: h}
+	}
+	selected, err := c.prompt.Select("Select a habit:", options, "")
+	if err != nil {
+		return "", err
+	}
+	return selected.Value, nil
 }
 
 func calcStreak(counts map[string]int, now time.Time) int {

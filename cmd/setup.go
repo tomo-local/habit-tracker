@@ -11,6 +11,7 @@ import (
 
 	"habit-tracker/internal/calendar"
 	"habit-tracker/internal/config"
+	"habit-tracker/internal/prompt"
 )
 
 const (
@@ -35,11 +36,6 @@ func (c *Cmd) RunSetup(args []string) error {
 		return err
 	}
 
-	selected, err := c.selectOrCreateCalendar(cal)
-	if err != nil {
-		return err
-	}
-
 	fmt.Println("Enter habit names (empty line to finish):")
 	scanner := bufio.NewScanner(os.Stdin)
 	var habits []string
@@ -56,6 +52,11 @@ func (c *Cmd) RunSetup(args []string) error {
 		return fmt.Errorf("no habits entered")
 	}
 
+	selected, err := c.selectOrCreateCalendar(cal)
+	if err != nil {
+		return err
+	}
+
 	cfg := &config.Config{
 		CalendarID:   selected.ID,
 		CalendarName: selected.Name,
@@ -69,12 +70,15 @@ func (c *Cmd) RunSetup(args []string) error {
 }
 
 func (c *Cmd) selectOrCreateCalendar(cal calendar.Client) (*calendar.CalendarEntry, error) {
-	choice, err := c.prompt.Select("Calendar:", []string{optionCreateCalendar, optionSelectCalendar}, optionCreateCalendar)
+	choice, err := c.prompt.Select("Calendar:", []prompt.Option{
+		{Label: optionCreateCalendar, Value: optionCreateCalendar},
+		{Label: optionSelectCalendar, Value: optionSelectCalendar},
+	}, optionCreateCalendar)
 	if err != nil {
 		return nil, err
 	}
 
-	if choice == optionCreateCalendar {
+	if choice.Value == optionCreateCalendar {
 		name, err := c.prompt.Input("Calendar name:", defaultNewCalendarName)
 		if err != nil {
 			return nil, err
@@ -94,18 +98,13 @@ func (c *Cmd) selectOrCreateCalendar(cal calendar.Client) (*calendar.CalendarEnt
 		return nil, fmt.Errorf("no calendars found")
 	}
 
-	names := make([]string, len(entries))
+	options := make([]prompt.Option, len(entries))
 	for i, e := range entries {
-		names[i] = e.Name
+		options[i] = prompt.Option{Label: e.Name, Value: e.ID}
 	}
-	selectedName, err := c.prompt.Select("Select a calendar:", names, "")
+	selected, err := c.prompt.Select("Select a calendar:", options, "")
 	if err != nil {
 		return nil, err
 	}
-	for _, e := range entries {
-		if e.Name == selectedName {
-			return e, nil
-		}
-	}
-	return nil, fmt.Errorf("calendar not found: %q", selectedName)
+	return &calendar.CalendarEntry{ID: selected.Value, Name: selected.Label}, nil
 }

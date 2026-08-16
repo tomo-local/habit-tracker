@@ -12,11 +12,14 @@ import (
 	"golang.org/x/oauth2/google"
 
 	"habit-tracker/internal/calendar"
+	"habit-tracker/internal/prompt"
 )
 
 const (
 	defaultDuration = 30
 	optionNewHabit  = "New habit"
+	minDuration     = 1
+	maxDuration     = 24 * 60
 )
 
 func (c *Cmd) RunAdd(args []string) error {
@@ -30,6 +33,9 @@ func (c *Cmd) RunAdd(args []string) error {
 	}
 	if fs.NArg() > 1 {
 		return fmt.Errorf("add takes at most one habit, got %d", fs.NArg())
+	}
+	if durationErr := validateDuration(*duration); durationErr != nil {
+		return durationErr
 	}
 
 	if err := c.cfg.Read(); err != nil {
@@ -89,7 +95,17 @@ func (c *Cmd) selectDuration() (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("invalid duration: %q", text)
 	}
+	if err := validateDuration(n); err != nil {
+		return 0, err
+	}
 	return n, nil
+}
+
+func validateDuration(n int) error {
+	if n < minDuration || n > maxDuration {
+		return fmt.Errorf("duration must be between %d and %d minutes, got %d", minDuration, maxDuration, n)
+	}
+	return nil
 }
 
 func (c *Cmd) selectOrCreateHabit(habits []string) (string, error) {
@@ -97,13 +113,17 @@ func (c *Cmd) selectOrCreateHabit(habits []string) (string, error) {
 		return "", fmt.Errorf("no habits configured (run setup first)")
 	}
 
-	options := append(append([]string{}, habits...), optionNewHabit)
+	options := make([]prompt.Option, 0, len(habits)+1)
+	for _, h := range habits {
+		options = append(options, prompt.Option{Label: h, Value: h})
+	}
+	options = append(options, prompt.Option{Label: optionNewHabit, Value: optionNewHabit})
 	selected, err := c.prompt.Select("Select a habit:", options, "")
 	if err != nil {
 		return "", err
 	}
-	if selected != optionNewHabit {
-		return selected, nil
+	if selected.Value != optionNewHabit {
+		return selected.Value, nil
 	}
 
 	name, err := c.prompt.Input("Habit name:", "")
@@ -124,7 +144,7 @@ Record today's habit on the configured Google Calendar.
 
 Arguments:
   habit  Habit name to record. If omitted, you'll be prompted to
-         select one interactively (or type a new one).
+         select one interactively1 (or type a new one).
 
 Options:
   -d <minutes>  Duration to record (default: 30). If omitted, you'll be
@@ -133,6 +153,6 @@ Options:
 Examples:
   habit-tracker add                  # select a habit and duration interactively
   habit-tracker add Golang           # record "Golang" for 30 minutes
-  habit-tracker add Golang -d 60     # record "Golang" for 60 minutes
+  habit-tracker add -d 60 Golang     # record "Golang" for 60 minutes
 `)
 }
