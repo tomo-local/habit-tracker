@@ -1,74 +1,74 @@
 # habit-tracker
 
-Googleカレンダーを使って習慣の継続状況を管理するCLIツール。
+A CLI tool for tracking daily habits using Google Calendar.
 
-- CLIでGitHub contributions風のheatmapを表示
-- カレンダーへの習慣記録を1コマンドで追加
-- 複数Googleアカウントの切り替えに対応
-- Web UIで習慣・記録を管理（`serve`、低優先度）
+- Displays a GitHub-contributions-style heatmap in the CLI
+- Records a habit to your calendar with a single command
+- Supports switching between multiple Google accounts
+- Manage habits and records from a web UI (`serve`, low priority)
 
-## コマンド一覧
-
-```sh
-habit-tracker                        # view と同じ（デフォルト習慣を表示）
-
-habit-tracker view                   # デフォルト習慣のheatmapをCLIで表示
-habit-tracker view <habit名>          # 指定した習慣を表示
-
-habit-tracker auth login             # Googleアカウントを認証してトークンを保存
-habit-tracker auth list              # 認証済みアカウント一覧
-habit-tracker auth switch            # アクティブアカウントを切り替え
-habit-tracker auth remove            # アカウントを削除
-
-habit-tracker setup                  # カレンダー選択・習慣登録（インタラクティブ）
-
-habit-tracker add                    # 登録済み習慣をインタラクティブに選んで記録
-habit-tracker add <habit名>           # 指定した習慣を直接記録
-habit-tracker add <habit名> -d 60    # 記録時間を変更（デフォルト: 30分）
-
-habit-tracker serve                  # Web UIを起動してブラウザで管理
-
-habit-tracker -h                     # コマンド一覧を表示
-habit-tracker <command> -h           # 各コマンドの詳細なオプション・使用例を表示
-```
-
-## セットアップ
-
-### 1. Google Calendar API の認証情報を作成
-
-1. [GCP コンソール](https://console.cloud.google.com/) でプロジェクトを作成
-2. 「APIとサービス」→「ライブラリ」で **Google Calendar API** を有効化
-3. 「認証情報」→「認証情報を作成」→「OAuth クライアント ID」→ 種類は **デスクトップアプリ**
-   （初回は同意画面の設定を求められる。User Type は「外部」＋テストユーザーに自分を追加）
-4. JSON をダウンロードして `~/.config/habit/credentials.json` として配置
-   （`HABIT_CREDENTIALS_DIR` 環境変数でディレクトリを変更可能）
-
-> **注意**: `credentials.json` を公開リポジトリに push しないこと。
-
-### 2. 認証とセットアップ
+## Commands
 
 ```sh
-habit-tracker auth login   # ブラウザでOAuth認証 → トークン保存
-habit-tracker setup        # カレンダーを新規作成 or 既存から選択し、追跡する習慣を登録
+habit-tracker                        # same as view (shows the default habit)
+
+habit-tracker view                   # show the default habit's heatmap in the CLI
+habit-tracker view <habit>           # show a specific habit
+
+habit-tracker auth login             # authenticate a Google account and save the token
+habit-tracker auth list              # list authenticated accounts
+habit-tracker auth switch            # switch the active account
+habit-tracker auth remove            # remove an account
+
+habit-tracker setup                  # select a calendar and register habits (interactive)
+
+habit-tracker add                    # interactively select a registered habit and record it
+habit-tracker add <habit>            # record a specific habit directly
+habit-tracker add -d 60 <habit>      # change the duration (default: 30 min; -d must come before the habit name)
+
+habit-tracker serve                  # start the web UI in a browser
+
+habit-tracker -h                     # show the command list
+habit-tracker <command> -h           # show detailed options and examples for a command
 ```
 
-### 3. 動作確認
+## Setup
+
+### 1. Create Google Calendar API credentials
+
+1. Create a project in the [GCP Console](https://console.cloud.google.com/)
+2. Under "APIs & Services" → "Library", enable the **Google Calendar API**
+3. Under "Credentials" → "Create Credentials" → "OAuth client ID", choose **Desktop app**
+   (you'll be asked to configure the consent screen on first use; set User Type to "External" and add yourself as a test user)
+4. Download the JSON and place it at `~/.config/habit/credentials.json`
+   (the directory can be changed with the `HABIT_CREDENTIALS_DIR` environment variable)
+
+> **Note**: Don't push `credentials.json` to a public repository.
+
+### 2. Authenticate and set up
 
 ```sh
-habit-tracker              # デフォルト習慣のheatmapが表示される
+habit-tracker auth login   # OAuth via browser -> saves the token
+habit-tracker setup        # create a new calendar or select an existing one, then register habits to track
 ```
 
-## ストレージ
+### 3. Verify it works
+
+```sh
+habit-tracker              # shows the default habit's heatmap
+```
+
+## Storage
 
 ```text
 ~/.config/habit/
-├── token.json       # OAuthトークン
-└── config.json      # 習慣・カレンダー設定
+├── token.json       # OAuth token
+└── config.json      # habit and calendar settings
 ```
 
-環境変数でパスを上書き可能:
-- `HABIT_CONFIG_DIR` — 設定ディレクトリのパス（デフォルト: `~/.config/habit/`）
-- `HABIT_CREDENTIALS_DIR` — `credentials.json` があるディレクトリのパス
+Paths can be overridden with environment variables:
+- `HABIT_CONFIG_DIR` — path to the config directory (default: `~/.config/habit/`)
+- `HABIT_CREDENTIALS_DIR` — path to the directory containing `credentials.json`
 
 ### config.json
 
@@ -76,21 +76,21 @@ habit-tracker              # デフォルト習慣のheatmapが表示される
 {
   "calendar_id": "abc123@group.calendar.google.com",
   "calendar_name": "habit",
-  "habits": ["筋トレ", "読書"]
+  "habits": ["workout", "reading"]
 }
 ```
 
-> **注意**: config.json は `setup` 経由でのみ変更する。手動編集は非対応。
+> **Note**: config.json should only be modified via `setup`. Manual edits are not supported.
 
-- `habits` — 追跡する習慣名のリスト。先頭の習慣が `view` のデフォルト表示になる
-- 習慣ごとにカレンダーを分ける運用なら `{"calendars": ["筋トレ", "読書"]}` だけでよい
+- `habits` — list of habit names to track. The first habit is the default shown by `view`
+- If you prefer to split habits across separate calendars, `{"calendars": ["workout", "reading"]}` alone is sufficient
 
-## view の表示
+## view output
 
-GitHub contributions グラフと同じレイアウト。列 = 週（左が過去）、行 = 曜日（上が日曜）。
+Same layout as a GitHub contributions graph. Columns = weeks (past on the left), rows = days of the week (Sunday on top).
 
 ```text
-筋トレ  🔥 12日連続
+workout  🔥 12 day streak
 
 
 Sun  □□□□□■□□■□■□□□□■□□■□■□□□□■□□■□■□□□□■□□■□■□□□
@@ -102,13 +102,17 @@ Fri  □■□□■□□■□■□□■□■□■□□■□■□□■
 Sat  □□■□□■□□■□■□□■□□□■□□■□■□□■□□□■□□■□■□□■□□□□□□
 ```
 
-- ■ = 実施日、□ = 未実施
-- 🔥 連続日数: 今日から遡って連続実施している日数（今日未実施でも昨日まで続いていれば継続扱い）
+- ■ = done, □ = not done
+- 🔥 streak: number of consecutive days completed, counting back from today (still counts as ongoing if today isn't done yet but yesterday was)
 
-## add の仕様
+## add behavior
 
-- 引数なし: 登録済み習慣を矢印キーで選択（一覧末尾の「New habit」で新規名を入力可）
-- `add <habit名>`: 名前を直接指定して記録
-- `-d <分>`: 記録する時間を直接指定（デフォルト: 30分、指定時は分数入力をスキップ）
-- `-d` 未指定時は habit 選択後に記録時間（分）を数値入力（デフォルト: 30分）
-- 同じ日に同じ習慣が記録済みなら何もしない（重複防止）
+- No argument: interactively select a registered habit with arrow keys (choose "New habit" at the end of the list to enter a new name)
+- `add <habit>`: record a specific habit directly by name
+- `-d <minutes>`: specify the duration directly (default: 30 min; skips the interactive prompt when given). `-d` must always come before the habit name (`add -d 60 <habit>`)
+- When `-d` is omitted, you'll be prompted for a duration in minutes after selecting the habit (default: 30 min; values outside 1–1440 are rejected)
+- If the habit is already recorded today, nothing happens (duplicate prevention)
+
+## License
+
+[MIT](LICENSE)
