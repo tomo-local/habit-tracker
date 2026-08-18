@@ -12,8 +12,8 @@ A CLI tool for tracking daily habits using Google Calendar.
 ```sh
 habit-tracker                        # same as view (shows the default habit)
 
-habit-tracker view                   # show the default habit's heatmap in the CLI
-habit-tracker view <habit>           # show a specific habit
+habit-tracker view                   # interactively select a habit and show its heatmap
+habit-tracker view <habit>           # show a specific habit directly (must be a configured habit)
 
 habit-tracker auth login             # authenticate a Google account and save the token
 habit-tracker auth list              # list authenticated accounts
@@ -83,7 +83,6 @@ Paths can be overridden with environment variables:
 > **Note**: config.json should only be modified via `setup`. Manual edits are not supported.
 
 - `habits` — list of habit names to track. The first habit is the default shown by `view`
-- If you prefer to split habits across separate calendars, `{"calendars": ["workout", "reading"]}` alone is sufficient
 
 ## view output
 

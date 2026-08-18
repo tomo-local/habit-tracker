@@ -31,15 +31,24 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 	if len(c.cfg.Habits) == 0 {
 		return fmt.Errorf("no habits configured (run setup first)")
 	}
+	if fs.NArg() > 1 {
+		return fmt.Errorf("view takes at most one habit, got %d", fs.NArg())
+	}
 
 	if *weeks <= 0 {
 		*weeks = c.cfg.Weeks()
 	}
 
 	var habitName string
-	if isDefault {
+	switch {
+	case fs.NArg() == 1:
+		habitName = fs.Arg(0)
+		if !contains(c.cfg.Habits, habitName) {
+			return fmt.Errorf("habit %q is not configured (run setup first)", habitName)
+		}
+	case isDefault:
 		habitName = c.cfg.Habits[0]
-	} else {
+	default:
 		habit, err := c.selectHabit(c.cfg.Habits)
 		if err != nil {
 			return err
@@ -98,6 +107,15 @@ func (c *Cmd) selectHabit(habits []string) (string, error) {
 	return selected.Value, nil
 }
 
+func contains(habits []string, name string) bool {
+	for _, h := range habits {
+		if h == name {
+			return true
+		}
+	}
+	return false
+}
+
 func calcStreak(counts map[string]int, now time.Time) int {
 	d := now
 	if counts[d.Format("2006-01-02")] == 0 {
@@ -112,15 +130,20 @@ func calcStreak(counts map[string]int, now time.Time) int {
 }
 
 func showViewHelp() {
-	fmt.Fprint(os.Stderr, `Usage: habit-tracker view [options]
+	fmt.Fprint(os.Stderr, `Usage: habit-tracker view [habit] [options]
 
 Select a habit and show its heatmap.
+
+Arguments:
+  habit  Habit name to show. If omitted, you'll be prompted to select one
+         interactively.
 
 Options:
   -w <weeks>  Number of weeks to display (default: config value, or 52)
 
 Examples:
   habit-tracker view          # select a habit and show its heatmap
+  habit-tracker view Golang   # show a specific habit directly
   habit-tracker view -w 26    # show the last 26 weeks
 `)
 }

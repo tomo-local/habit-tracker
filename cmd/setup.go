@@ -38,6 +38,8 @@ func (c *Cmd) RunSetup(args []string) error {
 
 	fmt.Println("Enter habit names (empty line to finish):")
 	scanner := bufio.NewScanner(os.Stdin)
+	defer scanner.Err() // ignore error on exit
+
 	var habits []string
 	for {
 		fmt.Print("> ")
@@ -63,7 +65,7 @@ func (c *Cmd) RunSetup(args []string) error {
 		Habits:       habits,
 	}
 	if err := cfg.Write(); err != nil {
-		return err
+		return fmt.Errorf("write config (calendar %q was already created; delete it manually if unwanted): %w", selected.Name, err)
 	}
 	fmt.Printf("Saved: calendar=%q habits=%v\n", selected.Name, habits)
 	return nil
