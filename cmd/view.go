@@ -14,6 +14,8 @@ import (
 	"habit-tracker/internal/prompt"
 )
 
+const optionAllHabits = "All habits"
+
 func (c *Cmd) RunView(args []string, isDefault bool) error {
 	fs := flag.NewFlagSet("view", flag.ContinueOnError)
 	weeks := fs.Int("w", 0, "number of weeks to display (default: config value or 52)")
@@ -38,7 +40,7 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 
 	var habitName string
 	if isDefault {
-		habitName = c.cfg.Habits[0]
+		habitName = optionAllHabits
 	} else {
 		habit, err := c.selectHabit(c.cfg.Habits)
 		if err != nil {
@@ -70,7 +72,10 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 
 	counts := make(map[string]int)
 	for _, e := range events {
-		if e.Title != habitName || e.End == nil {
+		if e.End == nil {
+			continue
+		}
+		if habitName != optionAllHabits && e.Title != habitName {
 			continue
 		}
 		minutes := int(e.End.Sub(e.Start).Minutes())
@@ -87,9 +92,10 @@ func (c *Cmd) selectHabit(habits []string) (string, error) {
 	if len(habits) == 0 {
 		return "", fmt.Errorf("no habits configured (run setup first)")
 	}
-	options := make([]prompt.Option, len(habits))
-	for i, h := range habits {
-		options[i] = prompt.Option{Label: h, Value: h}
+	options := make([]prompt.Option, 0, len(habits)+1)
+	options = append(options, prompt.Option{Label: optionAllHabits, Value: optionAllHabits})
+	for _, h := range habits {
+		options = append(options, prompt.Option{Label: h, Value: h})
 	}
 	selected, err := c.prompt.Select("Select a habit:", options, "")
 	if err != nil {
@@ -114,13 +120,14 @@ func calcStreak(counts map[string]int, now time.Time) int {
 func showViewHelp() {
 	fmt.Fprint(os.Stderr, `Usage: habit-tracker view [options]
 
-Select a habit and show its heatmap.
+Select a habit and show its heatmap. Choose "All habits" to show a combined
+heatmap and streak across every tracked habit.
 
 Options:
   -w <weeks>  Number of weeks to display (default: config value, or 52)
 
 Examples:
-  habit-tracker view          # select a habit and show its heatmap
+  habit-tracker view          # select a habit (or "All habits") and show its heatmap
   habit-tracker view -w 26    # show the last 26 weeks
 `)
 }
