@@ -10,9 +10,9 @@ A CLI tool for tracking daily habits using Google Calendar.
 ## Commands
 
 ```sh
-habit-tracker                        # same as view (shows the default habit)
+habit-tracker                        # same as view (shows the combined heatmap for all habits)
 
-habit-tracker view                   # interactively select a habit and show its heatmap
+habit-tracker view                   # interactively select a habit (or "All habits") and show its heatmap
 habit-tracker view <habit>           # show a specific habit directly (must be a configured habit)
 
 habit-tracker auth login             # authenticate a Google account and save the token
@@ -55,7 +55,7 @@ habit-tracker setup        # create a new calendar or select an existing one, th
 ### 3. Verify it works
 
 ```sh
-habit-tracker              # shows the default habit's heatmap
+habit-tracker              # shows the combined heatmap for all habits
 ```
 
 ## Storage
@@ -82,7 +82,8 @@ Paths can be overridden with environment variables:
 
 > **Note**: config.json should only be modified via `setup`. Manual edits are not supported.
 
-- `habits` — list of habit names to track. The first habit is the default shown by `view`
+- `habits` — list of habit names to track. Running `view` with no arguments (or the bare `habit-tracker` command) shows the combined "All habits" heatmap
+- If you prefer to split habits across separate calendars, `{"calendars": ["workout", "reading"]}` alone is sufficient
 
 ## view output
 
@@ -102,6 +103,7 @@ Sat  □□■□□■□□■□■□□■□□□■□□■□■□□
 ```
 
 - ■ = done, □ = not done
+- Selecting "All habits" from the interactive list shows a combined heatmap and streak across every tracked habit (a day counts if any habit was recorded)
 - 🔥 streak: number of consecutive days completed, counting back from today (still counts as ongoing if today isn't done yet but yesterday was)
 
 ## add behavior

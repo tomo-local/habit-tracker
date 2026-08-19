@@ -2,7 +2,7 @@
 bin/**
 
 # docs
-docs/**
+docs/reviews/**
 
 # OAuth認証情報(GitHubにはpushしない。ローカルのリポジトリ直下に置いて使う)
 credentials.json

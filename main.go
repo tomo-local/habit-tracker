@@ -61,18 +61,18 @@ func showHelp() {
 Usage: habit-tracker [command] [options]
 
 Commands:
-  (none)            Show heatmap for the first habit (no interactive selection)
-  view [options]    Select a habit and show its heatmap
-  add [habit...]    Record today's habit
-  setup             Create/select a calendar and register habit names
-  auth login        Authenticate with your Google account
-  help              Show this help message
-  -h, --help        Show this help message
+  (none)              Show combined heatmap for all habits (no interactive selection)
+  view [habit]        Select a habit (or show one directly) and show its heatmap
+  add [habit...]      Record today's habit
+  setup               Create/select a calendar and register habit names
+  auth login          Authenticate with your Google account
+  help                Show this help message
+  -h, --help          Show this help message
 
 Run 'habit-tracker <command> -h' for details and options of each command.
 
 Examples:
-  habit-tracker                 # show today's default habit heatmap
+  habit-tracker                 # show today's combined heatmap for all habits
   habit-tracker add             # record today's habit interactively
   habit-tracker add Golang      # record "Golang" for the default duration
   habit-tracker view -w 26      # show the last 26 weeks
