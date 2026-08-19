@@ -61,13 +61,13 @@ func showHelp() {
 Usage: habit-tracker [command] [options]
 
 Commands:
-  (none)            Show combined heatmap for all habits (no interactive selection)
-  view [options]    Select a habit and show its heatmap
-  add [habit...]    Record today's habit
-  setup             Create/select a calendar and register habit names
-  auth login        Authenticate with your Google account
-  help              Show this help message
-  -h, --help        Show this help message
+  (none)              Show combined heatmap for all habits (no interactive selection)
+  view [habit]        Select a habit (or show one directly) and show its heatmap
+  add [habit...]      Record today's habit
+  setup               Create/select a calendar and register habit names
+  auth login          Authenticate with your Google account
+  help                Show this help message
+  -h, --help          Show this help message
 
 Run 'habit-tracker <command> -h' for details and options of each command.
 
