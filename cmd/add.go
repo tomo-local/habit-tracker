@@ -25,6 +25,7 @@ const (
 func (c *Cmd) RunAdd(args []string) error {
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
 	duration := fs.Int("d", defaultDuration, "duration in minutes")
+	description := fs.String("D", "", "event description (Markdown)")
 	fs.Usage = func() {
 		showAddHelp()
 	}
@@ -79,7 +80,7 @@ func (c *Cmd) RunAdd(args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := client.AddEvent(c.cfg.CalendarID, habit, time.Duration(*duration)*time.Minute); err != nil {
+	if err := client.AddEvent(c.cfg.CalendarID, habit, *description, time.Duration(*duration)*time.Minute); err != nil {
 		return fmt.Errorf("add event %q: %w", habit, err)
 	}
 	fmt.Printf("Added: %s %dm\n", habit, *duration)
@@ -147,12 +148,15 @@ Arguments:
          select one interactively1 (or type a new one).
 
 Options:
-  -d <minutes>  Duration to record (default: 30). If omitted, you'll be
-                prompted to enter a value interactively.
+  -d <minutes>      Duration to record (default: 30). If omitted, you'll be
+                    prompted to enter a value interactively.
+  -D <description>  Event description in Markdown (default: none). Not
+                    prompted for interactively; only settable via this flag.
 
 Examples:
   habit-tracker add                  # select a habit and duration interactively
   habit-tracker add Golang           # record "Golang" for 30 minutes
   habit-tracker add -d 60 Golang     # record "Golang" for 60 minutes
+  habit-tracker add -D "**done**" Golang  # record "Golang" with a Markdown description
 `)
 }
