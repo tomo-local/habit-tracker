@@ -9,7 +9,7 @@ import (
 type Client interface {
 	ListCalendars() ([]*CalendarEntry, error)
 	CreateCalendar(summary string) (*CalendarEntry, error)
-	AddEvent(calendarID, title string, duration time.Duration) error
+	AddEvent(calendarID, title, description string, duration time.Duration) error
 	GetEvents(calendarID string, start, end time.Time) ([]*Event, error)
 }
 
@@ -33,13 +33,14 @@ func (c *client) CreateCalendar(summary string) (*CalendarEntry, error) {
 	return &CalendarEntry{ID: created.Id, Name: created.Summary}, nil
 }
 
-func (c *client) AddEvent(calendarID, title string, duration time.Duration) error {
+func (c *client) AddEvent(calendarID, title, description string, duration time.Duration) error {
 	end := time.Now()
 	start := end.Add(-duration)
 	event := &gcal.Event{
-		Summary: title,
-		Start:   &gcal.EventDateTime{DateTime: start.Format(time.RFC3339)},
-		End:     &gcal.EventDateTime{DateTime: end.Format(time.RFC3339)},
+		Summary:     title,
+		Description: description,
+		Start:       &gcal.EventDateTime{DateTime: start.Format(time.RFC3339)},
+		End:         &gcal.EventDateTime{DateTime: end.Format(time.RFC3339)},
 	}
 	_, err := c.svc.Events.Insert(calendarID, event).Do()
 	return err
