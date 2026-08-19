@@ -12,8 +12,8 @@ Google Calendar を使って日々の習慣を記録・可視化する CLI ツ�
 ```sh
 habit-tracker                        # view と同じ（全習慣を合算したヒートマップを表示）
 
-habit-tracker view                   # 習慣を選択してヒートマップを表示
-habit-tracker view <habit>           # 指定した習慣を表示
+habit-tracker view                   # 習慣（または「All habits」）を対話形式で選んでヒートマップを表示
+habit-tracker view <habit>           # 指定した習慣を直接表示（登録済みの習慣名のみ）
 
 habit-tracker auth login             # Google アカウントを認証してトークンを保存
 habit-tracker auth list              # 認証済みアカウントの一覧を表示
@@ -25,6 +25,7 @@ habit-tracker setup                  # カレンダーを選択し、習慣を�
 habit-tracker add                    # 登録済みの習慣を対話形式で選んで記録
 habit-tracker add <habit>            # 指定した習慣を直接記録
 habit-tracker add -d 60 <habit>      # 記録時間を変更（デフォルト30分。-d は習慣名より前に指定する）
+habit-tracker add -D "**note**" <habit>  # Event の説明をMarkdown形式で指定（-D は習慣名より前に指定する）
 
 habit-tracker serve                  # Web UI をブラウザで起動
 
@@ -112,6 +113,7 @@ Sat  □□■□□■□□■□■□□■□□□■□□■□■□□
 - `add <habit>`: 指定した習慣名を直接記録
 - `-d <minutes>`: 記録時間を直接指定（デフォルト30分。指定した場合は対話プロンプトをスキップする）。`-d` は必ず習慣名より前に指定する（`add -d 60 <habit>`）
 - `-d` を省略した場合、習慣を選択した後に分数の入力を求められる（デフォルト30分。1〜1440の範囲外の値は拒否される）
+- `-D <description>`: EventのDescriptionをMarkdown形式で指定（デフォルト: なし）。`-D` は必ず習慣名より前に指定する。対話形式のプロンプトは用意されておらず、フラグでのみ指定可能
 - その習慣が当日すでに記録済みの場合、何も起こらない（重複防止）
 
 ## ライセンス
