@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -11,26 +10,56 @@ import (
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	gcal "google.golang.org/api/calendar/v3"
+
+	"habit-tracker/internal/calendar"
+	"habit-tracker/internal/prompt"
+)
+
+const (
+	defaultDuration = 30
+	optionNewHabit  = "New habit"
+	minDuration     = 1
+	maxDuration     = 24 * 60
 )
 
 func (c *Cmd) RunAdd(args []string) error {
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
-	duration := fs.Int("d", 30, "duration in minutes")
+	duration := fs.Int("d", defaultDuration, "duration in minutes")
+	fs.Usage = func() {
+		showAddHelp()
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
+	}
+	if fs.NArg() > 1 {
+		return fmt.Errorf("add takes at most one habit, got %d", fs.NArg())
+	}
+	if durationErr := validateDuration(*duration); durationErr != nil {
+		return durationErr
 	}
 
 	if err := c.cfg.Read(); err != nil {
 		return err
 	}
 
-	var habits []string
+	var habit string
 	var err error
-	if fs.NArg() > 0 {
-		habits = fs.Args()
+	if fs.NArg() == 1 {
+		habit = fs.Arg(0)
 	} else {
-		habits, err = selectHabits(c.cfg.Habits)
+		habit, err = c.selectOrCreateHabit(c.cfg.Habits)
+		if err != nil {
+			return err
+		}
+	}
+	durationSet := false
+	fs.Visit(func(f *flag.Flag) {
+		if f.Name == "d" {
+			durationSet = true
+		}
+	})
+	if !durationSet {
+		*duration, err = c.selectDuration()
 		if err != nil {
 			return err
 		}
@@ -44,42 +73,86 @@ func (c *Cmd) RunAdd(args []string) error {
 		ClientID:     c.cfg.ClientID(),
 		ClientSecret: c.cfg.ClientSecret(),
 		Endpoint:     google.Endpoint,
-		Scopes:       []string{gcal.CalendarScope},
+		Scopes:       calendar.Scopes,
 	}
 	client, err := c.cal.GetClient(c.ctx, oauthCfg, token)
 	if err != nil {
 		return err
 	}
+	if err := client.AddEvent(c.cfg.CalendarID, habit, time.Duration(*duration)*time.Minute); err != nil {
+		return fmt.Errorf("add event %q: %w", habit, err)
+	}
+	fmt.Printf("Added: %s %dm\n", habit, *duration)
+	return nil
+}
 
-	for _, h := range habits {
-		if err := client.AddEvent(c.cfg.CalendarID, h, time.Duration(*duration)*time.Minute); err != nil {
-			return fmt.Errorf("add event %q: %w", h, err)
-		}
-		fmt.Printf("Added: %s\n", h)
+func (c *Cmd) selectDuration() (int, error) {
+	text, err := c.prompt.Input("Duration (minutes):", strconv.Itoa(defaultDuration))
+	if err != nil {
+		return 0, err
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(text))
+	if err != nil {
+		return 0, fmt.Errorf("invalid duration: %q", text)
+	}
+	if err := validateDuration(n); err != nil {
+		return 0, err
+	}
+	return n, nil
+}
+
+func validateDuration(n int) error {
+	if n < minDuration || n > maxDuration {
+		return fmt.Errorf("duration must be between %d and %d minutes, got %d", minDuration, maxDuration, n)
 	}
 	return nil
 }
 
-func selectHabits(habits []string) ([]string, error) {
+func (c *Cmd) selectOrCreateHabit(habits []string) (string, error) {
 	if len(habits) == 0 {
-		return nil, fmt.Errorf("no habits configured (run setup first)")
+		return "", fmt.Errorf("no habits configured (run setup first)")
 	}
-	for i, h := range habits {
-		fmt.Printf("  %d) %s\n", i+1, h)
-	}
-	fmt.Print("Select (comma-separated): ")
 
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	parts := strings.Split(scanner.Text(), ",")
-
-	var selected []string
-	for _, p := range parts {
-		n, err := strconv.Atoi(strings.TrimSpace(p))
-		if err != nil || n < 1 || n > len(habits) {
-			return nil, fmt.Errorf("invalid selection: %q", p)
-		}
-		selected = append(selected, habits[n-1])
+	options := make([]prompt.Option, 0, len(habits)+1)
+	for _, h := range habits {
+		options = append(options, prompt.Option{Label: h, Value: h})
 	}
-	return selected, nil
+	options = append(options, prompt.Option{Label: optionNewHabit, Value: optionNewHabit})
+	selected, err := c.prompt.Select("Select a habit:", options, "")
+	if err != nil {
+		return "", err
+	}
+	if selected.Value != optionNewHabit {
+		return selected.Value, nil
+	}
+
+	name, err := c.prompt.Input("Habit name:", "")
+	if err != nil {
+		return "", err
+	}
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "", fmt.Errorf("habit name is empty")
+	}
+	return name, nil
+}
+
+func showAddHelp() {
+	fmt.Fprint(os.Stderr, `Usage: habit-tracker add [habit] [options]
+
+Record today's habit on the configured Google Calendar.
+
+Arguments:
+  habit  Habit name to record. If omitted, you'll be prompted to
+         select one interactively1 (or type a new one).
+
+Options:
+  -d <minutes>  Duration to record (default: 30). If omitted, you'll be
+                prompted to enter a value interactively.
+
+Examples:
+  habit-tracker add                  # select a habit and duration interactively
+  habit-tracker add Golang           # record "Golang" for 30 minutes
+  habit-tracker add -d 60 Golang     # record "Golang" for 60 minutes
+`)
 }

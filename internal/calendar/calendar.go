@@ -8,6 +8,9 @@ import (
 	"google.golang.org/api/option"
 )
 
+// Scopes are the OAuth scopes required to use this package's Client.
+var Scopes = []string{gcal.CalendarScope}
+
 type Calendar interface {
 	GetClient(ctx context.Context, oauthCfg *oauth2.Config, token *oauth2.Token) (Client, error)
 }

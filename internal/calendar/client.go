@@ -8,6 +8,7 @@ import (
 
 type Client interface {
 	ListCalendars() ([]*CalendarEntry, error)
+	CreateCalendar(summary string) (*CalendarEntry, error)
 	AddEvent(calendarID, title string, duration time.Duration) error
 	GetEvents(calendarID string, start, end time.Time) ([]*Event, error)
 }
@@ -22,6 +23,14 @@ func (c *client) ListCalendars() ([]*CalendarEntry, error) {
 		return nil, err
 	}
 	return toCalendarEntries(list.Items), nil
+}
+
+func (c *client) CreateCalendar(summary string) (*CalendarEntry, error) {
+	created, err := c.svc.Calendars.Insert(&gcal.Calendar{Summary: summary}).Do()
+	if err != nil {
+		return nil, err
+	}
+	return &CalendarEntry{ID: created.Id, Name: created.Summary}, nil
 }
 
 func (c *client) AddEvent(calendarID, title string, duration time.Duration) error {

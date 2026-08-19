@@ -1,24 +1,25 @@
 package cmd
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	gcal "google.golang.org/api/calendar/v3"
 
+	"habit-tracker/internal/calendar"
 	"habit-tracker/internal/heatmap"
+	"habit-tracker/internal/prompt"
 )
 
 func (c *Cmd) RunView(args []string, isDefault bool) error {
 	fs := flag.NewFlagSet("view", flag.ContinueOnError)
 	weeks := fs.Int("w", 0, "number of weeks to display (default: config value or 52)")
+	fs.Usage = func() {
+		showViewHelp()
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -30,16 +31,25 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 	if len(c.cfg.Habits) == 0 {
 		return fmt.Errorf("no habits configured (run setup first)")
 	}
+	if fs.NArg() > 1 {
+		return fmt.Errorf("view takes at most one habit, got %d", fs.NArg())
+	}
 
 	if *weeks <= 0 {
 		*weeks = c.cfg.Weeks()
 	}
 
 	var habitName string
-	if isDefault {
+	switch {
+	case fs.NArg() == 1:
+		habitName = fs.Arg(0)
+		if !contains(c.cfg.Habits, habitName) {
+			return fmt.Errorf("habit %q is not configured (run setup first)", habitName)
+		}
+	case isDefault:
 		habitName = c.cfg.Habits[0]
-	} else {
-		habit, err := selectHabit(c.cfg.Habits)
+	default:
+		habit, err := c.selectHabit(c.cfg.Habits)
 		if err != nil {
 			return err
 		}
@@ -54,7 +64,7 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 		ClientID:     c.cfg.ClientID(),
 		ClientSecret: c.cfg.ClientSecret(),
 		Endpoint:     google.Endpoint,
-		Scopes:       []string{gcal.CalendarScope},
+		Scopes:       calendar.Scopes,
 	}
 	client, err := c.cal.GetClient(c.ctx, oauthCfg, token)
 	if err != nil {
@@ -82,25 +92,28 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 	return nil
 }
 
-func selectHabit(habits []string) (string, error) {
+func (c *Cmd) selectHabit(habits []string) (string, error) {
 	if len(habits) == 0 {
 		return "", fmt.Errorf("no habits configured (run setup first)")
 	}
+	options := make([]prompt.Option, len(habits))
 	for i, h := range habits {
-		fmt.Printf("  %d) %s\n", i+1, h)
+		options[i] = prompt.Option{Label: h, Value: h}
 	}
-	fmt.Print("Select (comma-separated): ")
-
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	part := scanner.Text()
-
-	n, err := strconv.Atoi(strings.TrimSpace(part))
-	if err != nil || n < 1 || n > len(habits) {
-		return "", fmt.Errorf("invalid selection: %q", n)
+	selected, err := c.prompt.Select("Select a habit:", options, "")
+	if err != nil {
+		return "", err
 	}
+	return selected.Value, nil
+}
 
-	return habits[n-1], nil
+func contains(habits []string, name string) bool {
+	for _, h := range habits {
+		if h == name {
+			return true
+		}
+	}
+	return false
 }
 
 func calcStreak(counts map[string]int, now time.Time) int {
@@ -114,4 +127,23 @@ func calcStreak(counts map[string]int, now time.Time) int {
 		d = d.AddDate(0, 0, -1)
 	}
 	return streak
+}
+
+func showViewHelp() {
+	fmt.Fprint(os.Stderr, `Usage: habit-tracker view [habit] [options]
+
+Select a habit and show its heatmap.
+
+Arguments:
+  habit  Habit name to show. If omitted, you'll be prompted to select one
+         interactively.
+
+Options:
+  -w <weeks>  Number of weeks to display (default: config value, or 52)
+
+Examples:
+  habit-tracker view          # select a habit and show its heatmap
+  habit-tracker view Golang   # show a specific habit directly
+  habit-tracker view -w 26    # show the last 26 weeks
+`)
 }

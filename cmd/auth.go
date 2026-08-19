@@ -7,9 +7,9 @@ import (
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	gcal "google.golang.org/api/calendar/v3"
 
 	"habit-tracker/internal/auth"
+	"habit-tracker/internal/calendar"
 	"habit-tracker/internal/config"
 )
 
@@ -22,7 +22,7 @@ func (c *Cmd) RunAuth(args []string) error {
 		ClientID:     c.cfg.ClientID(),
 		ClientSecret: c.cfg.ClientSecret(),
 		Endpoint:     google.Endpoint,
-		Scopes:       []string{gcal.CalendarScope},
+		Scopes:       calendar.Scopes,
 	}
 
 	a := auth.New(oauthCfg)
@@ -31,6 +31,7 @@ func (c *Cmd) RunAuth(args []string) error {
 		return err
 	}
 
+	// Persist the obtained token so other commands can reuse it via c.cfg.LoadToken().
 	f, err := os.OpenFile(config.TokenPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
