@@ -50,18 +50,25 @@ func Test_Client(t *testing.T) {
 	})
 
 	t.Run("AddEvent", func(t *testing.T) {
+		var gotBody gcal.Event
 		mux := http.NewServeMux()
 		mux.HandleFunc("/calendars/cal1/events", func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != http.MethodPost {
 				http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 				return
 			}
+			if err := json.NewDecoder(r.Body).Decode(&gotBody); err != nil {
+				t.Fatalf("decode request body: %v", err)
+			}
 			json.NewEncoder(w).Encode(gcal.Event{Id: "ev1"})
 		})
 
-		err := newTestClient(t, mux).AddEvent("cal1", "workout", 30*time.Minute)
+		err := newTestClient(t, mux).AddEvent("cal1", "workout", "**done**", 30*time.Minute)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
+		}
+		if gotBody.Description != "**done**" {
+			t.Errorf("got description %q, want %q", gotBody.Description, "**done**")
 		}
 	})
 

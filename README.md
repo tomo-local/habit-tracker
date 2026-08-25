@@ -25,6 +25,7 @@ habit-tracker setup                  # select a calendar and register habits (in
 habit-tracker add                    # interactively select a registered habit and record it
 habit-tracker add <habit>            # record a specific habit directly
 habit-tracker add -d 60 <habit>      # change the duration (default: 30 min; -d must come before the habit name)
+habit-tracker add -D "**note**" <habit>  # set a Markdown event description (-D must come before the habit name)
 
 habit-tracker serve                  # start the web UI in a browser
 
@@ -112,6 +113,7 @@ Sat  □□■□□■□□■□■□□■□□□■□□■□■□□
 - `add <habit>`: record a specific habit directly by name
 - `-d <minutes>`: specify the duration directly (default: 30 min; skips the interactive prompt when given). `-d` must always come before the habit name (`add -d 60 <habit>`)
 - When `-d` is omitted, you'll be prompted for a duration in minutes after selecting the habit (default: 30 min; values outside 1–1440 are rejected)
+- `-D <description>`: set the event description in Markdown (default: none). `-D` must always come before the habit name. There is no interactive prompt for this — it's only settable via the flag
 - If the habit is already recorded today, nothing happens (duplicate prevention)
 
 ## License
