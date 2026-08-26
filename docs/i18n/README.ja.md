@@ -7,6 +7,26 @@ Google Calendar を使って日々の習慣を記録・可視化する CLI ツ�
 - 複数の Google アカウントの切り替えに対応
 - Web UI から習慣・記録を管理（`serve`、優先度低）
 
+## インストール
+
+```sh
+brew tap tomo-local/habit-tracker https://github.com/tomo-local/habit-tracker
+brew trust tomo-local/habit-tracker   # Homebrew 6.0+: 初めて使うtapを信頼する操作が必要
+brew install habit-tracker
+```
+
+## セットアップ
+
+ビルド済みバイナリ（`brew install`）には共有のOAuthクライアントが埋め込まれているため、Google Cloud側の準備は不要。認証して習慣を登録するだけで使える。
+
+```sh
+habit-tracker auth login   # ブラウザ経由で OAuth 認証 -> トークンを保存
+habit-tracker setup        # 新規カレンダーの作成または既存カレンダーの選択、追跡する習慣の登録
+habit-tracker              # 動作確認: 全習慣を合算したヒートマップを表示
+```
+
+> ソースからビルドして、共有クライアントではなく自分のGoogle Cloud OAuthクライアントを使いたい場合は [docs/development.md](../development.md) を参照。
+
 ## コマンド
 
 ```sh
@@ -32,59 +52,6 @@ habit-tracker serve                  # Web UI をブラウザで起動
 habit-tracker -h                     # コマンド一覧を表示
 habit-tracker <command> -h           # 各コマンドの詳細なオプションと例を表示
 ```
-
-## セットアップ
-
-### 1. Google Calendar API の認証情報を作成する
-
-1. [GCP Console](https://console.cloud.google.com/) でプロジェクトを作成する
-2. 「APIs & Services」→「Library」から **Google Calendar API** を有効化する
-3. 「Credentials」→「Create Credentials」→「OAuth client ID」で **Desktop app** を選択する
-   （初回利用時に同意画面の設定を求められる。User Type は「External」にし、自分自身をテストユーザーとして追加する）
-4. ダウンロードした JSON を `~/.config/habit/credentials.json` に配置する
-   （配置先ディレクトリは環境変数 `HABIT_CREDENTIALS_DIR` で変更可能）
-
-> **注意**: `credentials.json` を公開リポジトリに push しないこと。
-
-### 2. 認証してセットアップする
-
-```sh
-habit-tracker auth login   # ブラウザ経由で OAuth 認証 -> トークンを保存
-habit-tracker setup        # 新規カレンダーの作成または既存カレンダーの選択、追跡する習慣の登録
-```
-
-### 3. 動作確認
-
-```sh
-habit-tracker              # 全習慣を合算したヒートマップを表示
-```
-
-## ストレージ
-
-```text
-~/.config/habit/
-├── token.json       # OAuth トークン
-└── config.json      # 習慣・カレンダーの設定
-```
-
-パスは環境変数で上書きできる:
-- `HABIT_CONFIG_DIR` — 設定ディレクトリのパス（デフォルト: `~/.config/habit/`）
-- `HABIT_CREDENTIALS_DIR` — `credentials.json` を配置するディレクトリのパス
-
-### config.json
-
-```json
-{
-  "calendar_id": "abc123@group.calendar.google.com",
-  "calendar_name": "habit",
-  "habits": ["workout", "reading"]
-}
-```
-
-> **注意**: config.json は `setup` 経由でのみ変更すること。手動編集はサポート対象外。
-
-- `habits` — 追跡する習慣名のリスト。引数なしで `view` を実行した場合（または `habit-tracker` を単体で実行した場合）、全習慣を合算した「All habits」のヒートマップが表示される
-- 習慣ごとにカレンダーを分けたい場合は `{"calendars": ["workout", "reading"]}` のみで十分
 
 ## view の出力
 
@@ -115,6 +82,32 @@ Sat  □□■□□■□□■□■□□■□□□■□□■□■□□
 - `-d` を省略した場合、習慣を選択した後に分数の入力を求められる（デフォルト30分。1〜1440の範囲外の値は拒否される）
 - `-D <description>`: EventのDescriptionをMarkdown形式で指定（デフォルト: なし）。`-D` は必ず習慣名より前に指定する。対話形式のプロンプトは用意されておらず、フラグでのみ指定可能
 - その習慣が当日すでに記録済みの場合、何も起こらない（重複防止）
+
+## ストレージ
+
+```text
+~/.config/habit/
+├── token.json       # OAuth トークン
+└── config.json      # 習慣・カレンダーの設定
+```
+
+パスは環境変数で上書きできる:
+- `HABIT_CONFIG_DIR` — 設定ディレクトリのパス（デフォルト: `~/.config/habit/`）
+
+### config.json
+
+```json
+{
+  "calendar_id": "abc123@group.calendar.google.com",
+  "calendar_name": "habit",
+  "habits": ["workout", "reading"]
+}
+```
+
+> **注意**: config.json は `setup` 経由でのみ変更すること。手動編集はサポート対象外。
+
+- `habits` — 追跡する習慣名のリスト。引数なしで `view` を実行した場合（または `habit-tracker` を単体で実行した場合）、全習慣を合算した「All habits」のヒートマップが表示される
+- 習慣ごとにカレンダーを分けたい場合は `{"calendars": ["workout", "reading"]}` のみで十分
 
 ## ライセンス
 

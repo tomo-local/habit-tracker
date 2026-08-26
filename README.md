@@ -15,6 +15,18 @@ brew trust tomo-local/habit-tracker   # Homebrew 6.0+: required to trust a new t
 brew install habit-tracker
 ```
 
+## Setup
+
+Pre-built binaries (via `brew install`) embed a shared OAuth client, so no Google Cloud setup is needed — just authenticate and register your habits.
+
+```sh
+habit-tracker auth login   # OAuth via browser -> saves the token
+habit-tracker setup        # create a new calendar or select an existing one, then register habits to track
+habit-tracker              # verify: shows the combined heatmap for all habits
+```
+
+> Building from source and want your own Google Cloud OAuth client instead of the shared one? See [docs/development.md](docs/development.md).
+
 ## Commands
 
 ```sh
@@ -40,59 +52,6 @@ habit-tracker serve                  # start the web UI in a browser
 habit-tracker -h                     # show the command list
 habit-tracker <command> -h           # show detailed options and examples for a command
 ```
-
-## Setup
-
-### 1. Create Google Calendar API credentials
-
-1. Create a project in the [GCP Console](https://console.cloud.google.com/)
-2. Under "APIs & Services" → "Library", enable the **Google Calendar API**
-3. Under "Credentials" → "Create Credentials" → "OAuth client ID", choose **Desktop app**
-   (you'll be asked to configure the consent screen on first use; set User Type to "External" and add yourself as a test user)
-4. Download the JSON and place it at `~/.config/habit/credentials.json`
-   (the directory can be changed with the `HABIT_CREDENTIALS_DIR` environment variable)
-
-> **Note**: Don't push `credentials.json` to a public repository.
-
-### 2. Authenticate and set up
-
-```sh
-habit-tracker auth login   # OAuth via browser -> saves the token
-habit-tracker setup        # create a new calendar or select an existing one, then register habits to track
-```
-
-### 3. Verify it works
-
-```sh
-habit-tracker              # shows the combined heatmap for all habits
-```
-
-## Storage
-
-```text
-~/.config/habit/
-├── token.json       # OAuth token
-└── config.json      # habit and calendar settings
-```
-
-Paths can be overridden with environment variables:
-- `HABIT_CONFIG_DIR` — path to the config directory (default: `~/.config/habit/`)
-- `HABIT_CREDENTIALS_DIR` — path to the directory containing `credentials.json`
-
-### config.json
-
-```json
-{
-  "calendar_id": "abc123@group.calendar.google.com",
-  "calendar_name": "habit",
-  "habits": ["workout", "reading"]
-}
-```
-
-> **Note**: config.json should only be modified via `setup`. Manual edits are not supported.
-
-- `habits` — list of habit names to track. Running `view` with no arguments (or the bare `habit-tracker` command) shows the combined "All habits" heatmap
-- If you prefer to split habits across separate calendars, `{"calendars": ["workout", "reading"]}` alone is sufficient
 
 ## view output
 
@@ -123,6 +82,32 @@ Sat  □□■□□■□□■□■□□■□□□■□□■□■□□
 - When `-d` is omitted, you'll be prompted for a duration in minutes after selecting the habit (default: 30 min; values outside 1–1440 are rejected)
 - `-D <description>`: set the event description in Markdown (default: none). `-D` must always come before the habit name. There is no interactive prompt for this — it's only settable via the flag
 - If the habit is already recorded today, nothing happens (duplicate prevention)
+
+## Storage
+
+```text
+~/.config/habit/
+├── token.json       # OAuth token
+└── config.json      # habit and calendar settings
+```
+
+Paths can be overridden with environment variables:
+- `HABIT_CONFIG_DIR` — path to the config directory (default: `~/.config/habit/`)
+
+### config.json
+
+```json
+{
+  "calendar_id": "abc123@group.calendar.google.com",
+  "calendar_name": "habit",
+  "habits": ["workout", "reading"]
+}
+```
+
+> **Note**: config.json should only be modified via `setup`. Manual edits are not supported.
+
+- `habits` — list of habit names to track. Running `view` with no arguments (or the bare `habit-tracker` command) shows the combined "All habits" heatmap
+- If you prefer to split habits across separate calendars, `{"calendars": ["workout", "reading"]}` alone is sufficient
 
 ## License
 
