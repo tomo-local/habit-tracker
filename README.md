@@ -11,6 +11,7 @@ A CLI tool for tracking daily habits using Google Calendar.
 
 ```sh
 brew tap tomo-local/habit-tracker https://github.com/tomo-local/habit-tracker
+brew trust tomo-local/habit-tracker   # Homebrew 6.0+: required to trust a new tap on first use
 brew install habit-tracker
 ```
 
