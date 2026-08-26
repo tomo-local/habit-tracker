@@ -1,13 +1,31 @@
-# ビルド成果物
+# build artifacts
 bin/**
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# go
+go.work
+go.work.sum
 
 # docs
-docs/reviews/**
+# self documentation directory
+docs/local/**
 
-# OAuth認証情報(GitHubにはpushしない。ローカルのリポジトリ直下に置いて使う)
-credentials.json
-token.json
-
-.DS_Store
-
+# env
+.env
 .envrc
+
+# temporary files
+.DS_Store
+*.log
+*.tmp
+
+# editor
+.idea/
+*.swp
+*.swo
