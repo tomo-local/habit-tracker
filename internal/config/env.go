@@ -13,6 +13,14 @@ import (
 
 var habitConfigDir = "HABIT_CONFIG_DIR"
 
+var defaultOAuth = struct {
+	ClientID     string
+	ClientSecret string
+}{
+	ClientID:     "357079410304-cb56g740mmp73o0qa8plopmutd6dbfvk.apps.googleusercontent.com",
+	ClientSecret: "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",
+}
+
 func ConfigDir() string {
 	if envPath := os.Getenv(habitConfigDir); envPath != "" {
 		return envPath
@@ -27,11 +35,17 @@ func TokenPath() string {
 }
 
 func (c *Config) ClientID() string {
-	return os.Getenv("HABIT_CLIENT_ID")
+	if v := os.Getenv("HABIT_CLIENT_ID"); v != "" {
+		return v
+	}
+	return defaultOAuth.ClientID
 }
 
 func (c *Config) ClientSecret() string {
-	return os.Getenv("HABIT_CLIENT_SECRET")
+	if v := os.Getenv("HABIT_CLIENT_SECRET"); v != "" {
+		return v
+	}
+	return defaultOAuth.ClientSecret
 }
 
 func (c *Config) LoadToken() (*oauth2.Token, error) {
