@@ -47,7 +47,7 @@ go run . auth login   # opens the OAuth consent screen using your client
 ## Build & test
 
 ```sh
-mise run build   # go build -o bin/habit-tracker
+mise run build   # go build -o bin/habit
 mise run test    # go test ./...
 ```
 

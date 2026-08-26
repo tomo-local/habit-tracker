@@ -20,9 +20,9 @@ brew install habit-tracker
 Pre-built binaries (via `brew install`) embed a shared OAuth client, so no Google Cloud setup is needed — just authenticate and register your habits.
 
 ```sh
-habit-tracker auth login   # OAuth via browser -> saves the token
-habit-tracker setup        # create a new calendar or select an existing one, then register habits to track
-habit-tracker              # verify: shows the combined heatmap for all habits
+habit auth login   # OAuth via browser -> saves the token
+habit setup        # create a new calendar or select an existing one, then register habits to track
+habit              # verify: shows the combined heatmap for all habits
 ```
 
 > Building from source and want your own Google Cloud OAuth client instead of the shared one? See [docs/development.md](docs/development.md).
@@ -30,27 +30,27 @@ habit-tracker              # verify: shows the combined heatmap for all habits
 ## Commands
 
 ```sh
-habit-tracker                        # same as view (shows the combined heatmap for all habits)
+habit                        # same as view (shows the combined heatmap for all habits)
 
-habit-tracker view                   # interactively select a habit (or "All habits") and show its heatmap
-habit-tracker view <habit>           # show a specific habit directly (must be a configured habit)
+habit view                   # interactively select a habit (or "All habits") and show its heatmap
+habit view <habit>           # show a specific habit directly (must be a configured habit)
 
-habit-tracker auth login             # authenticate a Google account and save the token
-habit-tracker auth list              # list authenticated accounts (planned, not yet implemented)
-habit-tracker auth switch            # switch the active account (planned, not yet implemented)
-habit-tracker auth remove            # remove an account (planned, not yet implemented)
+habit auth login             # authenticate a Google account and save the token
+habit auth list              # list authenticated accounts (planned, not yet implemented)
+habit auth switch            # switch the active account (planned, not yet implemented)
+habit auth remove            # remove an account (planned, not yet implemented)
 
-habit-tracker setup                  # select a calendar and register habits (interactive)
+habit setup                  # select a calendar and register habits (interactive)
 
-habit-tracker add                    # interactively select a registered habit and record it
-habit-tracker add <habit>            # record a specific habit directly
-habit-tracker add -d 60 <habit>      # change the duration (default: 30 min; -d must come before the habit name)
-habit-tracker add -D "**note**" <habit>  # set a Markdown event description (-D must come before the habit name)
+habit add                    # interactively select a registered habit and record it
+habit add <habit>            # record a specific habit directly
+habit add -d 60 <habit>      # change the duration (default: 30 min; -d must come before the habit name)
+habit add -D "**note**" <habit>  # set a Markdown event description (-D must come before the habit name)
 
-habit-tracker serve                  # start the web UI in a browser (planned, not yet implemented)
+habit serve                  # start the web UI in a browser (planned, not yet implemented)
 
-habit-tracker -h                     # show the command list
-habit-tracker <command> -h           # show detailed options and examples for a command
+habit -h                     # show the command list
+habit <command> -h           # show detailed options and examples for a command
 ```
 
 ## view output
@@ -106,7 +106,7 @@ Paths can be overridden with environment variables:
 
 > **Note**: config.json should only be modified via `setup`. Manual edits are not supported.
 
-- `habits` — list of habit names to track. Running `view` with no arguments (or the bare `habit-tracker` command) shows the combined "All habits" heatmap
+- `habits` — list of habit names to track. Running `view` with no arguments (or the bare `habit` command) shows the combined "All habits" heatmap
 - If you prefer to split habits across separate calendars, `{"calendars": ["workout", "reading"]}` alone is sufficient
 
 ## License

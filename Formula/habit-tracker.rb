@@ -22,10 +22,10 @@ class HabitTracker < Formula
 
   def install
     binary_name = Dir["habit-tracker-*"].first
-    bin.install binary_name => "habit-tracker"
+    bin.install binary_name => "habit"
   end
 
   test do
-    system "#{bin}/habit-tracker", "-h"
+    system "#{bin}/habit", "-h"
   end
 end

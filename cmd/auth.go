@@ -15,7 +15,7 @@ import (
 
 func (c *Cmd) RunAuth(args []string) error {
 	if len(args) == 0 || args[0] != "login" {
-		return fmt.Errorf("usage: habit-tracker auth login")
+		return fmt.Errorf("usage: habit auth login")
 	}
 
 	oauthCfg := &oauth2.Config{

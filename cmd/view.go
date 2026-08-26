@@ -136,7 +136,7 @@ func calcStreak(counts map[string]int, now time.Time) int {
 }
 
 func showViewHelp() {
-	fmt.Fprint(os.Stderr, `Usage: habit-tracker view [habit] [options]
+	fmt.Fprint(os.Stderr, `Usage: habit view [habit] [options]
 
 Select a habit and show its heatmap. Choose "All habits" (or omit the
 argument and pick it interactively) to show a combined heatmap and streak
@@ -150,8 +150,8 @@ Options:
   -w <weeks>  Number of weeks to display (default: config value, or 52)
 
 Examples:
-  habit-tracker view          # select a habit (or "All habits") and show its heatmap
-  habit-tracker view Golang   # show a specific habit directly
-  habit-tracker view -w 26    # show the last 26 weeks
+  habit view          # select a habit (or "All habits") and show its heatmap
+  habit view Golang   # show a specific habit directly
+  habit view -w 26    # show the last 26 weeks
 `)
 }

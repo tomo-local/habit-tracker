@@ -41,7 +41,7 @@ func main() {
 		showHelp()
 		os.Exit(0)
 	default:
-		fmt.Fprintf(os.Stderr, "unknown command: %q\nRun 'habit-tracker --help' for usage.\n", command)
+		fmt.Fprintf(os.Stderr, "unknown command: %q\nRun 'habit --help' for usage.\n", command)
 		os.Exit(1)
 	}
 
@@ -56,9 +56,9 @@ func main() {
 }
 
 func showHelp() {
-	fmt.Fprint(os.Stderr, `habit-tracker: track daily habits via Google Calendar events
+	fmt.Fprint(os.Stderr, `habit: track daily habits via Google Calendar events
 
-Usage: habit-tracker [command] [options]
+Usage: habit [command] [options]
 
 Commands:
   (none)              Show combined heatmap for all habits (no interactive selection)
@@ -69,12 +69,12 @@ Commands:
   help                Show this help message
   -h, --help          Show this help message
 
-Run 'habit-tracker <command> -h' for details and options of each command.
+Run 'habit <command> -h' for details and options of each command.
 
 Examples:
-  habit-tracker                 # show today's combined heatmap for all habits
-  habit-tracker add             # record today's habit interactively
-  habit-tracker add Golang      # record "Golang" for the default duration
-  habit-tracker view -w 26      # show the last 26 weeks
+  habit                 # show today's combined heatmap for all habits
+  habit add             # record today's habit interactively
+  habit add Golang      # record "Golang" for the default duration
+  habit view -w 26      # show the last 26 weeks
 `)
 }

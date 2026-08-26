@@ -20,9 +20,9 @@ brew install habit-tracker
 ビルド済みバイナリ（`brew install`）には共有のOAuthクライアントが埋め込まれているため、Google Cloud側の準備は不要。認証して習慣を登録するだけで使える。
 
 ```sh
-habit-tracker auth login   # ブラウザ経由で OAuth 認証 -> トークンを保存
-habit-tracker setup        # 新規カレンダーの作成または既存カレンダーの選択、追跡する習慣の登録
-habit-tracker              # 動作確認: 全習慣を合算したヒートマップを表示
+habit auth login   # ブラウザ経由で OAuth 認証 -> トークンを保存
+habit setup        # 新規カレンダーの作成または既存カレンダーの選択、追跡する習慣の登録
+habit              # 動作確認: 全習慣を合算したヒートマップを表示
 ```
 
 > ソースからビルドして、共有クライアントではなく自分のGoogle Cloud OAuthクライアントを使いたい場合は [docs/development.md](../development.md) を参照。
@@ -30,27 +30,27 @@ habit-tracker              # 動作確認: 全習慣を合算したヒートマ�
 ## コマンド
 
 ```sh
-habit-tracker                        # view と同じ（全習慣を合算したヒートマップを表示）
+habit                        # view と同じ（全習慣を合算したヒートマップを表示）
 
-habit-tracker view                   # 習慣（または「All habits」）を対話形式で選んでヒートマップを表示
-habit-tracker view <habit>           # 指定した習慣を直接表示（登録済みの習慣名のみ）
+habit view                   # 習慣（または「All habits」）を対話形式で選んでヒートマップを表示
+habit view <habit>           # 指定した習慣を直接表示（登録済みの習慣名のみ）
 
-habit-tracker auth login             # Google アカウントを認証してトークンを保存
-habit-tracker auth list              # 認証済みアカウントの一覧を表示（予定、未実装）
-habit-tracker auth switch            # 使用するアカウントを切り替え（予定、未実装）
-habit-tracker auth remove            # アカウントを削除（予定、未実装）
+habit auth login             # Google アカウントを認証してトークンを保存
+habit auth list              # 認証済みアカウントの一覧を表示（予定、未実装）
+habit auth switch            # 使用するアカウントを切り替え（予定、未実装）
+habit auth remove            # アカウントを削除（予定、未実装）
 
-habit-tracker setup                  # カレンダーを選択し、習慣を登録（対話形式）
+habit setup                  # カレンダーを選択し、習慣を登録（対話形式）
 
-habit-tracker add                    # 登録済みの習慣を対話形式で選んで記録
-habit-tracker add <habit>            # 指定した習慣を直接記録
-habit-tracker add -d 60 <habit>      # 記録時間を変更（デフォルト30分。-d は習慣名より前に指定する）
-habit-tracker add -D "**note**" <habit>  # Event の説明をMarkdown形式で指定（-D は習慣名より前に指定する）
+habit add                    # 登録済みの習慣を対話形式で選んで記録
+habit add <habit>            # 指定した習慣を直接記録
+habit add -d 60 <habit>      # 記録時間を変更（デフォルト30分。-d は習慣名より前に指定する）
+habit add -D "**note**" <habit>  # Event の説明をMarkdown形式で指定（-D は習慣名より前に指定する）
 
-habit-tracker serve                  # Web UI をブラウザで起動（予定、未実装）
+habit serve                  # Web UI をブラウザで起動（予定、未実装）
 
-habit-tracker -h                     # コマンド一覧を表示
-habit-tracker <command> -h           # 各コマンドの詳細なオプションと例を表示
+habit -h                     # コマンド一覧を表示
+habit <command> -h           # 各コマンドの詳細なオプションと例を表示
 ```
 
 ## view の出力
@@ -106,7 +106,7 @@ Sat  □□■□□■□□■□■□□■□□□■□□■□■□□
 
 > **注意**: config.json は `setup` 経由でのみ変更すること。手動編集はサポート対象外。
 
-- `habits` — 追跡する習慣名のリスト。引数なしで `view` を実行した場合（または `habit-tracker` を単体で実行した場合）、全習慣を合算した「All habits」のヒートマップが表示される
+- `habits` — 追跡する習慣名のリスト。引数なしで `view` を実行した場合（または `habit` を単体で実行した場合）、全習慣を合算した「All habits」のヒートマップが表示される
 - 習慣ごとにカレンダーを分けたい場合は `{"calendars": ["workout", "reading"]}` のみで十分
 
 ## ライセンス
