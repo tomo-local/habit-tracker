@@ -1,0 +1,5 @@
+export HABIT_CLIENT_ID="your-google-oauth-client-id.apps.googleusercontent.com"
+export HABIT_CLIENT_SECRET="your-google-oauth-client-secret"
+
+# optional: override the config/token storage location (defaults to ~/.config/habit)
+# export HABIT_CONFIG_DIR="$HOME/.config/habit"
