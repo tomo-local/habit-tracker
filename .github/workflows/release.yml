@@ -45,18 +45,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
+      - name: generate release notes
+        run: scripts/generate-release-notes.sh "${{ github.ref_name }}" > release-notes.md
+
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: dist/*
-          generate_release_notes: true
+          body_path: release-notes.md
 
   update-formula:
     needs: release

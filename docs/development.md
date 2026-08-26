@@ -53,4 +53,4 @@ mise run test    # go test ./...
 
 ## Release
 
-Releases are cut by the repository owner by pushing a `v*` tag; `.github/workflows/release.yml` handles the rest (cross-compiling binaries, publishing the GitHub Release, and updating `Formula/habit-tracker.rb`). Contributors don't need to do anything for this.
+Releases are cut by the repository owner by pushing a `v*` tag; `.github/workflows/release.yml` handles the rest (cross-compiling binaries, publishing the GitHub Release with notes generated from Conventional Commits messages since the previous tag, and updating `Formula/habit-tracker.rb`). Contributors don't need to do anything for this.
