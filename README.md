@@ -4,8 +4,8 @@ A CLI tool for tracking daily habits using Google Calendar.
 
 - Displays a GitHub-contributions-style heatmap in the CLI
 - Records a habit to your calendar with a single command
-- Supports switching between multiple Google accounts
-- Manage habits and records from a web UI (`serve`, low priority)
+- Supports switching between multiple Google accounts *(planned, not yet implemented)*
+- Manage habits and records from a web UI (`serve`, low priority) *(planned, not yet implemented)*
 
 ## Install
 
@@ -36,9 +36,9 @@ habit-tracker view                   # interactively select a habit (or "All hab
 habit-tracker view <habit>           # show a specific habit directly (must be a configured habit)
 
 habit-tracker auth login             # authenticate a Google account and save the token
-habit-tracker auth list              # list authenticated accounts
-habit-tracker auth switch            # switch the active account
-habit-tracker auth remove            # remove an account
+habit-tracker auth list              # list authenticated accounts (planned, not yet implemented)
+habit-tracker auth switch            # switch the active account (planned, not yet implemented)
+habit-tracker auth remove            # remove an account (planned, not yet implemented)
 
 habit-tracker setup                  # select a calendar and register habits (interactive)
 
@@ -47,7 +47,7 @@ habit-tracker add <habit>            # record a specific habit directly
 habit-tracker add -d 60 <habit>      # change the duration (default: 30 min; -d must come before the habit name)
 habit-tracker add -D "**note**" <habit>  # set a Markdown event description (-D must come before the habit name)
 
-habit-tracker serve                  # start the web UI in a browser
+habit-tracker serve                  # start the web UI in a browser (planned, not yet implemented)
 
 habit-tracker -h                     # show the command list
 habit-tracker <command> -h           # show detailed options and examples for a command

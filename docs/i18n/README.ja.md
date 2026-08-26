@@ -4,8 +4,8 @@ Google Calendar を使って日々の習慣を記録・可視化する CLI ツ�
 
 - GitHub の contributions グラフ風のヒートマップを CLI に表示
 - 1コマンドで習慣をカレンダーに記録
-- 複数の Google アカウントの切り替えに対応
-- Web UI から習慣・記録を管理（`serve`、優先度低）
+- 複数の Google アカウントの切り替えに対応 *(予定、未実装)*
+- Web UI から習慣・記録を管理（`serve`、優先度低） *(予定、未実装)*
 
 ## インストール
 
@@ -36,9 +36,9 @@ habit-tracker view                   # 習慣（または「All habits」）を�
 habit-tracker view <habit>           # 指定した習慣を直接表示（登録済みの習慣名のみ）
 
 habit-tracker auth login             # Google アカウントを認証してトークンを保存
-habit-tracker auth list              # 認証済みアカウントの一覧を表示
-habit-tracker auth switch            # 使用するアカウントを切り替え
-habit-tracker auth remove            # アカウントを削除
+habit-tracker auth list              # 認証済みアカウントの一覧を表示（予定、未実装）
+habit-tracker auth switch            # 使用するアカウントを切り替え（予定、未実装）
+habit-tracker auth remove            # アカウントを削除（予定、未実装）
 
 habit-tracker setup                  # カレンダーを選択し、習慣を登録（対話形式）
 
@@ -47,7 +47,7 @@ habit-tracker add <habit>            # 指定した習慣を直接記録
 habit-tracker add -d 60 <habit>      # 記録時間を変更（デフォルト30分。-d は習慣名より前に指定する）
 habit-tracker add -D "**note**" <habit>  # Event の説明をMarkdown形式で指定（-D は習慣名より前に指定する）
 
-habit-tracker serve                  # Web UI をブラウザで起動
+habit-tracker serve                  # Web UI をブラウザで起動（予定、未実装）
 
 habit-tracker -h                     # コマンド一覧を表示
 habit-tracker <command> -h           # 各コマンドの詳細なオプションと例を表示
