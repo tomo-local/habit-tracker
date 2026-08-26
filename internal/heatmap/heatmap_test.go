@@ -10,12 +10,12 @@ func Test_colorBlock(t *testing.T) {
 		minutes  int
 		wantCode int
 	}{
-		{0, 236},   // colorNone — gray only for zero
-		{15, 22},   // colorLight — any >0 gets at least light
-		{30, 34},   // colorMedium
-		{60, 46},   // colorDark
-		{120, 82},  // colorMax
-		{180, 82},  // above 120m → colorMax
+		{0, 236},  // colorNone — gray only for zero
+		{15, 22},  // colorLight — any >0 gets at least light
+		{30, 34},  // colorMedium
+		{60, 46},  // colorDark
+		{120, 82}, // colorMax
+		{180, 82}, // above 120m → colorMax
 	}
 
 	for _, tt := range tests {
