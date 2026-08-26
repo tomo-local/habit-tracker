@@ -74,10 +74,10 @@ func Test_Client(t *testing.T) {
 
 	t.Run("GetEvents", func(t *testing.T) {
 		tests := []struct {
-			name       string
-			items      []*gcal.Event
-			wantCount  int
-			wantTitle  string
+			name      string
+			items     []*gcal.Event
+			wantCount int
+			wantTitle string
 		}{
 			{
 				name: "returns converted events",

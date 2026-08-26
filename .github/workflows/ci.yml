@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+
+      - name: gofmt check
+        run: |
+          diff=$(gofmt -l .)
+          if [ -n "$diff" ]; then
+            echo "The following files are not gofmt'ed:"
+            echo "$diff"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: build
+        run: mise run build
+
+      - name: test
+        run: mise run test
