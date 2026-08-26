@@ -7,6 +7,13 @@ A CLI tool for tracking daily habits using Google Calendar.
 - Supports switching between multiple Google accounts
 - Manage habits and records from a web UI (`serve`, low priority)
 
+## Install
+
+```sh
+brew tap tomo-local/habit-tracker https://github.com/tomo-local/habit-tracker
+brew install habit-tracker
+```
+
 ## Commands
 
 ```sh
