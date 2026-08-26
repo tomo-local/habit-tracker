@@ -60,10 +60,19 @@ func (c *Cmd) RunSetup(args []string) error {
 		return err
 	}
 
+	existing := &config.Config{}
+	_ = existing.Read() // ignore not-exist; ViewWeek defaults to 0
+
+	viewWeek := existing.ViewWeek
+	if viewWeek == 0 {
+		viewWeek = defaultViewWeek
+	}
+
 	cfg := &config.Config{
 		CalendarID:   selected.ID,
 		CalendarName: selected.Name,
 		Habits:       habits,
+		ViewWeek:     viewWeek,
 	}
 	if err := cfg.Write(); err != nil {
 		return fmt.Errorf("write config (calendar %q was already created; delete it manually if unwanted): %w", selected.Name, err)
