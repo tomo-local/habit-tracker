@@ -16,20 +16,21 @@ import (
 
 const (
 	defaultNewCalendarName = "habit"
+	defaultViewWeek        = 12
 	optionCreateCalendar   = "Create a new calendar"
 	optionSelectCalendar   = "Select an existing calendar"
 )
 
 func (c *Cmd) RunSetup(args []string) error {
-	token, err := c.cfg.LoadToken()
-	if err != nil {
-		return fmt.Errorf("read token (run auth login first): %w", err)
-	}
 	oauthCfg := &oauth2.Config{
 		ClientID:     c.cfg.ClientID(),
 		ClientSecret: c.cfg.ClientSecret(),
 		Endpoint:     google.Endpoint,
 		Scopes:       calendar.Scopes,
+	}
+	token, err := loadOrAuthorizeToken(c.cfg, oauthCfg)
+	if err != nil {
+		return err
 	}
 	cal, err := c.cal.GetClient(c.ctx, oauthCfg, token)
 	if err != nil {

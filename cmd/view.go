@@ -58,15 +58,15 @@ func (c *Cmd) RunView(args []string, isDefault bool) error {
 		habitName = habit
 	}
 
-	token, err := c.cfg.LoadToken()
-	if err != nil {
-		return fmt.Errorf("read token (run auth login first): %w", err)
-	}
 	oauthCfg := &oauth2.Config{
 		ClientID:     c.cfg.ClientID(),
 		ClientSecret: c.cfg.ClientSecret(),
 		Endpoint:     google.Endpoint,
 		Scopes:       calendar.Scopes,
+	}
+	token, err := loadOrAuthorizeToken(c.cfg, oauthCfg)
+	if err != nil {
+		return err
 	}
 	client, err := c.cal.GetClient(c.ctx, oauthCfg, token)
 	if err != nil {
