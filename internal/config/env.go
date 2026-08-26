@@ -13,13 +13,15 @@ import (
 
 var habitConfigDir = "HABIT_CONFIG_DIR"
 
-var defaultOAuth = struct {
-	ClientID     string
-	ClientSecret string
-}{
-	ClientID:     "357079410304-cb56g740mmp73o0qa8plopmutd6dbfvk.apps.googleusercontent.com",
-	ClientSecret: "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",
-}
+// defaultOAuth holds the shared OAuth client used when HABIT_CLIENT_ID /
+// HABIT_CLIENT_SECRET are not set. Values are empty in source control and
+// injected at release-build time via:
+//
+//	go build -ldflags "-X habit-tracker/internal/config.defaultClientID=... -X habit-tracker/internal/config.defaultClientSecret=..."
+var (
+	defaultClientID     = ""
+	defaultClientSecret = ""
+)
 
 func ConfigDir() string {
 	if envPath := os.Getenv(habitConfigDir); envPath != "" {
@@ -38,14 +40,14 @@ func (c *Config) ClientID() string {
 	if v := os.Getenv("HABIT_CLIENT_ID"); v != "" {
 		return v
 	}
-	return defaultOAuth.ClientID
+	return defaultClientID
 }
 
 func (c *Config) ClientSecret() string {
 	if v := os.Getenv("HABIT_CLIENT_SECRET"); v != "" {
 		return v
 	}
-	return defaultOAuth.ClientSecret
+	return defaultClientSecret
 }
 
 func (c *Config) LoadToken() (*oauth2.Token, error) {
